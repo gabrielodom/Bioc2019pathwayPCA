@@ -14,12 +14,12 @@
 
 # Workshop Description
 
-With the advance in high-throughput technology for molecular assays, multi-omics datasets have become increasingly available. In this workshop, we will demonstrate using the pathwayPCA package to perform integrative pathway-based analyses of multi-omics datasets. In particular, we will demonstrate capabilities of pathwayPCA through three case studies
+With the advance in high-throughput technology for molecular assays, multi-omics datasets have become increasingly available. In this workshop, we will demonstrate using the pathwayPCA package to perform integrative pathway-based analyses of multi-omics datasets. In particular, we will demonstrate through three case studies the capabilities of pathwayPCA to
 
-- pathway analysis with gene selection,
-- integrative analysis of multi-omics datasets to identify driver genes,
-- estimating and visualizing sample-specific pathway activities in ovarian cancer, and
-- identifying pathways with sex-specific effects in kidney cancer.
+- perform pathway analysis with gene selection,
+- integrate multi-omics datasets to identify driver genes,
+- estimate and visualize sample-specific pathway activities in ovarian cancer, and
+- identify pathways with sex-specific effects in kidney cancer.
 
 
 ## Pre-requisites

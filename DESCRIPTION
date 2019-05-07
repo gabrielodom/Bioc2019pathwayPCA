@@ -1,0 +1,42 @@
+Package: Bioc2019pathwayPCA
+Title: A workshop on the pathwayPCA package
+Version: 0.1.0
+Authors@R: 
+    c(
+      person(
+        given = "Gabriel", family = "Odom",
+        role = c("aut", "cre"), email = "Gabriel.odom@med.miami.edu"
+      ),
+      person(
+        given = "Yuguang", family = "Ban",
+        role = "aut", email = "Yuguang.ban@med.miami.edu"
+      ),
+      person(
+        given = "Lily", family = "Wang",
+        role = "aut", email = "lily.wang@med.miami.edu"
+      ),
+      person(
+        given = "Steven", family = "Chen",
+        role = "aut", email = "steven.chen@med.miami.edu"
+      )
+    )
+Description: With the advance in high-throughput technology for molecular
+    assays, multi-omics datasets have become increasingly available. In this
+    workshop, we will demonstrate using the pathwayPCA package to perform
+    integrative pathway-based analyses of multi-omics datasets. In particular,
+    we will demonstrate through three case studies the capabilities of
+    pathwayPCA to 1) perform pathway analysis with gene selection, 2) integrate
+    multi-omics datasets to identify driver genes, 3) estimate and visualize
+    sample-specific pathway activities in ovarian cancer, and 4) identify
+    pathways with sex-specific effects in kidney cancer.
+Depends:
+    R (>= 3.5),
+    pathwayPCA,
+    tidyverse
+License: Creative Commons Attribution 4.0 International License
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
