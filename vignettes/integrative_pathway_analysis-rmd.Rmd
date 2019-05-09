@@ -3,9 +3,9 @@ title: "Integrative Pathway Analysis with pathwayPCA"
 author: "Gabriel Odom, Yuguang Ban, Lily Wang, & Xi Chen"
 date: "`r Sys.Date()`"
 output:
-  rmarkdown::html_vignette:
+  BiocStyle::html_document:
+    number_sections: yes
     toc: true
-    toc_depth: 2
 vignette: >
   %\VignetteIndexEntry{Integrative Pathway Analysis with pathwayPCA}
   %\VignetteEncoding{UTF-8}
@@ -13,10 +13,105 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      cache = FALSE,
-                      comment = "#>")
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  cache = FALSE,
+  comment = "#>"
+)
 ```
+
+
+# Instructors
+
+* Gabriel J. Odom^[University of Miami's Miller School of Medicine, Miami, FL] (<gabriel.odom@med.miami.edu>)
+* Yuguang James Ban^[University of Miami's Sylvester Comprehensive Cancer Center, Miami, FL] (<Yuguang.ban@med.miami.edu>)
+
+
+# Workshop Description
+
+With the advance in high-throughput technology for molecular assays, multi-omics datasets have become increasingly available. In this workshop, we will demonstrate using the pathwayPCA package to perform integrative pathway-based analyses of multi-omics datasets. In particular, we will demonstrate through three case studies the capabilities of pathwayPCA to
+
+- perform pathway analysis with gene selection,
+- integrate multi-omics datasets to identify driver genes,
+- estimate and visualize sample-specific pathway activities in ovarian cancer, and
+- identify pathways with sex-specific effects in kidney cancer.
+
+There is a built version of this workshop available at <http://rpubs.com/gabrielodom/XXXXXX>. The source is available at <https://github.com/gabrielodom/Bioc2019pathwayPCA>.
+
+## Pre-requisites
+
+* Basic knowledge of R syntax
+* Familiarity with RStudio
+* Familiarity with pathway analysis 
+* Knowledge of [*Principal Components Analysis*](https://en.wikipedia.org/wiki/Principal_component_analysis) (PCA) is helpful but not required
+
+## Workshop Participation
+
+This will be a hands-on workshop, students will live-code with us. It would be helpful for participants to bring a laptop with RStudio and pathwayPCA package installed (https://gabrielodom.github.io/pathwayPCA/index.html#installing-the-package).
+
+## R/Bioconductor packages used
+
+To install the workshop dependencies, assuming you have already installed Bioconductor (www.bioconductor.org/install):
+```
+install.packages(c("survival", "survminer", "tidyverse"))
+BiocManager::install("rWikiPathways")
+BiocManager::install("pathwayPCA")
+```
+
+We also strongly recommend the [RStudio](https://www.rstudio.com/products/rstudio/download/) integrated development environment as a user-friendly graphical wrapper for R.
+
+### Package Descriptions
+* `pathwayPCA` will be covered in depth
+* [`rWikiPathways`](https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html) is a package to download and utilize the WikiPathways collection of community-defined biological pathways
+* [`survival`]() is the core CRAN package for survival analysis and censored data structures
+* [`survminer`](https://cran.r-project.org/package=survminer) is a CRAN package for drawing survival curves with `ggplot2` (included in the `tidyverse` package suite).
+* [`tidyverse` package suite](https://www.tidyverse.org/) is a collection of utility packages for data science: . (We will make use of some data constructs and ideas from these packages, but we do not expect users to be intimately familiar with Tidyverse)
+
+
+### (Optional) Development Version
+Because we are currently in the development phase for version 2 of this package, you can install the package from GitHub. In order to install a package from GitHub, you will need the `devtools::` package (https://github.com/r-lib/devtools) and either [Rtools](https://cran.r-project.org/bin/windows/Rtools/) (for Windows) or [Xcode](https://developer.apple.com/xcode/) (for Mac). Then you can install the development version of the [`pathwayPCA` package](https://github.com/gabrielodom/pathwayPCA) from [GitHub](https://github.com/):
+```
+devtools::install_github("gabrielodom/pathwayPCA")
+```
+
+
+```{r, message=FALSE}
+library(survival)
+library(rWikiPathways)
+library(tidyverse)
+library(survminer)
+library(pathwayPCA)
+```
+
+## Time outline
+
+50m total
+
+| Activity                                                             | Time |
+|----------------------------------------------------------------------|------|
+| Introduction to `pathwayPCA`                                         | 10m  |
+| Case Study 1: Estimating sample-specific pathway activities          | 10m  |
+| Case Study 2: Pathway analysis for multi-omics datasets              | 10m  |
+| Case Study 3: Analyzing experiments with covariates and interactions | 10m  |
+| Summary and Conclusion                                               | 5m   |
+| Questions and Comments                                               | 5m   |
+
+# Workshop goals and objectives
+
+## Learning goals
+
+* Describe PCA-based pathway analysis
+* Apply the pathwayPCA workflow in typical gene expression and copy number variations experiments
+* Perform integrative pathway-based analysis for multiple types of omics data jointly
+* Apply pathwayPCA to experiments with complex designs, such as those with covariate and/or interaction effects
+
+## Learning objectives
+
+* Identify pathways significantly associated with survival, binary, or continuous outcome using the pathwayPCA approach
+* Prioritize genes most likely to be driver (instead of passenger) genes using integrative analysis 
+* Estimate and visualize individual gene effects within a significant pathway
+* Estimate and visualize sample-specific pathway activities
+* Identify pathways with significant sex-specific effects
 
 
 
@@ -32,29 +127,6 @@ knitr::opts_chunk$set(collapse = TRUE,
 4. Extract relevant genes that drive pathway significance as well as data corresponding to these relevant genes for additional in-depth analysis.
 5. Perform analyses with enhanced computational efficiency with parallel computing and enhanced data safety with S4-class data objects.
 6. Analyze studies with complex experimental designs, with multiple covariates, and with interaction effects, e.g., testing whether pathway association with clinical phenotype is different between male and female subjects.
-
-## Installing the Package
-`pathwayPCA` is a package for R, so you need [R](https://cloud.r-project.org/) first. We also strongly recommend the [RStudio](https://www.rstudio.com/products/rstudio/download/) integrated development environment as a user-friendly graphical wrapper for R.
-
-### Stable Build
-The stable build of our package will be available on Bioconductor in May of 2019. To access Bioconductor packages, first install BiocManager, then use BiocManager to install this package:
-```
-install.packages("BiocManager")
-BiocManager::install("pathwayPCA")
-```
-
-### Development Build
-Because we are currently in the development phase for version 2 of this package, you can install the package from GitHub. In order to install a package from GitHub, you will need the `devtools::` package (https://github.com/r-lib/devtools) and either [Rtools](https://cran.r-project.org/bin/windows/Rtools/) (for Windows) or [Xcode](https://developer.apple.com/xcode/) (for Mac). Then you can install the development version of the [`pathwayPCA` package](https://github.com/gabrielodom/pathwayPCA) from [GitHub](https://github.com/):
-```
-devtools::install_github("gabrielodom/pathwayPCA")
-```
-
-## Loading Packages
-Throughout this vignette, we will make use of the `tidyverse` suite of utility packages (https://www.tidyverse.org/). The `tidyverse` and `pathwayPCA` can be loaded into R using: 
-```{r packLoad, message=FALSE}
-library(tidyverse)
-library(pathwayPCA)
-```
 
 </br>
 
