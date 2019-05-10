@@ -65,6 +65,7 @@ We also strongly recommend the RStudio^[<https://www.rstudio.com/products/rstudi
 ### Package Descriptions
 * `pathwayPCA`^[<https://gabrielodom.github.io/pathwayPCA/>] will be covered in depth
 * `rWikiPathways`^[<https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html>] is a package to download and utilize the WikiPathways collection of community-defined biological pathways
+* `knitr`^[<https://CRAN.R-project.org/package=knitr>] cleans up R's presentation output
 * `survival`^[<https://CRAN.R-project.org/package=survival>] is the core CRAN package for survival analysis and censored data structures
 * `survminer`^[<https://cran.r-project.org/package=survminer>] is a CRAN package for drawing survival curves with `ggplot2` (included in the `tidyverse` package suite).
 * `tidyverse`^[<https://www.tidyverse.org/>] package suite is a collection of utility packages for data science: . (We will make use of some data constructs and ideas from these packages, but we do not expect users to be intimately familiar with Tidyverse)
@@ -78,6 +79,7 @@ devtools::install_github("gabrielodom/pathwayPCA")
 
 
 ```{r, message=FALSE, warning=FALSE}
+library(knitr)
 library(survival)
 library(rWikiPathways)
 library(tidyverse)
@@ -272,7 +274,7 @@ This is in contrast to the SuperPCA approach, where a selected subset of genes m
 ### Implementation 
 Because the syntax for performing SuperPCA is nearly identical to the AESPCA syntax, we will illustrate only the AESPCA workflow below. 
 
-Note that when the value supplied to the `numReps` argument is greater than 0, the `AESPCA_pvals()` function employs a parametric test when estimating pathway significance via the following model: "phenotype ~ intercept + PC1". Pathway $p$-values are estimated based on a likelihood ratio test that compares this model to a null model (with intercept only). 
+We estimate pathway significance via the following model: `phenotype ~ intercept + PC1`. Pathway $p$-values are estimated based on a likelihood ratio test that compares this model to a null model (with intercept only). Note that when the value supplied to the `numReps` argument is greater than 0, the `AESPCA_pvals()` function employs a non-parametric test of to assign the statistical significance of this model.
 ```{r aespcaCall, comment=""}
 ovarian_aespcOut <- AESPCA_pVals(
   # The Omics data container
@@ -297,9 +299,11 @@ names(ovarian_aespcOut)
 ```
 
 ### The pathway analysis results
-For this ovarian cancer dataset, the top 10 most significant pathways identified by AESPCA are:
+For this ovarian cancer dataset, the top 5 most significant pathways identified by AESPCA are:
 ```{r headPVals}
-getPathpVals(ovarian_aespcOut, numPaths = 10)
+kable(
+  getPathpVals(ovarian_aespcOut, numPaths = 5)
+)
 ```
 
 Before constructing a graph of the $p$-values, we extract the top 20 pathways (the default value for `numPaths` is 20): 
@@ -315,11 +319,13 @@ ggplot(ovOutGather_df) +
   # Define the dependent and independent variables
   aes(x = reorder(terms, score), y = score) +
   # From the defined variables, create a vertical bar chart
-  geom_col(position = "dodge", fill = "#66FFFF", width = 0.7) +
+  geom_col(position = "dodge", fill = "#005030", width = 0.7) +
+  # Add a line showing the alpha = 0.0001 level
+  geom_hline(yintercept = -log10(0.0001), size = 1, color = "#f47321") +
   # Add pathway labels
   geom_text(
     aes(x = reorder(terms, score), label = reorder(description, score), y = 0.1),
-    color = "black",
+    color = "white",
     size = 2, 
     hjust = 0
   ) +
@@ -327,8 +333,6 @@ ggplot(ovOutGather_df) +
   ggtitle("AESPCA Significant Pathways: Ovarian Cancer") +
   xlab("Pathways") +
   ylab("Negative Log10 (p-Value)") +
-  # Add a line showing the alpha = 0.0001 level
-  geom_hline(yintercept = -log10(0.0001), size = 1, color = "blue") +
   # Flip the x and y axes
   coord_flip()
 ```
@@ -336,7 +340,7 @@ ggplot(ovOutGather_df) +
 ### Extract relevant genes from significant pathways 
 Because pathways are defined *a priori*, typically only a subset of genes within each pathway are relevant to the phenotype and contribute to pathway significance. In AESPCA, these relevant genes are the genes with nonzero loadings in the first PC of AESPCs.
 
-For example, for the "IL-1 signaling pathway" (Wikipathways [WP195](https://www.wikipathways.org/index.php/Pathway:WP195)), we can extract the **PC**s and their protein **L**oadings using the `getPathPCLs()` function:
+For example, for the "IL-1 signaling pathway" (Wikipathways WP195^[<https://www.wikipathways.org/index.php/Pathway:WP195>]), we can extract the **PC**s and their protein **L**oadings using the `getPathPCLs()` function:
 ```{r getWP195pcl}
 wp195PCLs_ls <- getPathPCLs(ovarian_aespcOut, "WP195")
 wp195PCLs_ls
@@ -381,7 +385,7 @@ ggplot(data = wp195Loadings_df) +
   guides(fill = FALSE)
 ```
 
-Alternatively, we can also plot the correlation of each gene with first PC for each gene. These correlations can be computed by using the `TidyCorrelation()` function in [Section 3.3](https://gabrielodom.github.io/pathwayPCA/articles/Supplement5-Analyse_Results.html#gene-correlations-with-pcs) of additional vignette “Chapter 5 - Visualizing the Results”.
+Alternatively, we can also plot the correlation of each gene with first PC for each gene. These correlations can be computed by using the `TidyCorrelation()` function in `pathwayPCA`'s vignette “Chapter 5 - Visualizing the Results”, Section 3.3.^[<https://gabrielodom.github.io/pathwayPCA/articles/Supplement5-Analyse_Results.html#gene-correlations-with-pcs>]
 
 ### Subject-specific PCA estimates   
 In the study of complex diseases, there is often considerable heterogeneity among different subjects with regard to underlying causes of disease and benefit of particular treatment. Therefore, in addition to identifying disease-relevant pathways for the entire patient group, successful (personalized) treatment regimens will also depend upon knowing if a particular pathway is dysregulated for an individual patient.
@@ -444,8 +448,6 @@ NFKB1_fit <- survfit(
 
 Finally, we can plot these K-M curves over NFKB1 protein expression.
 ```{r NFKB1SurvPlot, message=FALSE, fig.height = 4, fig.width = 6}
-library(survminer)
-
 ggsurvplot(
   NFKB1_fit,
   conf.int = FALSE, pval = TRUE,
