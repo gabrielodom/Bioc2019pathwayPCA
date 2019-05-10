@@ -37,6 +37,7 @@ Encoding: UTF-8
 LazyData: true
 Suggests: 
     knitr,
+    papeR,
     rmarkdown,
     rWikiPathways,
     survival,

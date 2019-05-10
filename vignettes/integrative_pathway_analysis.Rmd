@@ -66,6 +66,7 @@ We also strongly recommend the RStudio^[<https://www.rstudio.com/products/rstudi
 * `pathwayPCA`^[<https://gabrielodom.github.io/pathwayPCA/>] will be covered in depth
 * `rWikiPathways`^[<https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html>] is a package to download and utilize the WikiPathways collection of community-defined biological pathways
 * `knitr`^[<https://CRAN.R-project.org/package=knitr>] cleans up R's presentation output
+* `papeR`^[<https://CRAN.R-project.org/package=papeR>] cleans up R's fitted model output
 * `survival`^[<https://CRAN.R-project.org/package=survival>] is the core CRAN package for survival analysis and censored data structures
 * `survminer`^[<https://cran.r-project.org/package=survminer>] is a CRAN package for drawing survival curves with `ggplot2` (included in the `tidyverse` package suite).
 * `tidyverse`^[<https://www.tidyverse.org/>] package suite is a collection of utility packages for data science: . (We will make use of some data constructs and ideas from these packages, but we do not expect users to be intimately familiar with Tidyverse)
@@ -80,6 +81,7 @@ devtools::install_github("gabrielodom/pathwayPCA")
 
 ```{r, message=FALSE, warning=FALSE}
 library(knitr)
+library(papeR)
 library(survival)
 library(rWikiPathways)
 library(tidyverse)
@@ -300,7 +302,7 @@ names(ovarian_aespcOut)
 
 ### The pathway analysis results
 For this ovarian cancer dataset, the top 5 most significant pathways identified by AESPCA are:
-```{r headPVals}
+```{r headPVals, results='asis'}
 kable(
   getPathpVals(ovarian_aespcOut, numPaths = 5)
 )
@@ -428,8 +430,15 @@ wp195_mod <- coxph(
   Surv(EventTime, EventObs) ~ NFKB1,
   data = NFKB1_df
 )
+```
 
-summary(wp195_mod)
+Now we inspect the wrangled output from the Cox PH model:
+```{r dataSubsetSummary, results='asis', message=FALSE}
+wp195pretty_mod <- prettify(
+  summary(wp195_mod)
+)
+
+kable(wp195pretty_mod)
 ```
 
 Additionally, we can estimate Kaplan-Meier survival curves for patients with high or low expression values for individual genes: 
