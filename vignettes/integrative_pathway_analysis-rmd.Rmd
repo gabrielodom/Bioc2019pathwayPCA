@@ -82,7 +82,7 @@ library(survival)
 library(rWikiPathways)
 library(tidyverse)
 library(survminer)
-library(pathwayPCA)
+library(Bioc2019pathwayPCA)
 ```
 
 ## Time outline
@@ -121,7 +121,9 @@ library(pathwayPCA)
 
 # Introduction
 
-`pathwayPCA` is an integrative analysis tool that implements the principal component analysis (PCA) based pathway analysis approaches described in Chen et al. (2008), Chen et al. (2010), and Chen (2011).  `pathwayPCA` allows users to:
+`pathwayPCA` is an integrative analysis tool that implements the principal component analysis (PCA) based pathway analysis approaches.^[ [Chen et al. (2008)](https://doi.org/10.1093/bioinformatics/btn458) ] ^[ [Chen et al. (2010)](https://doi.org/10.1002/gepi.20532) ] ^[ [Chen (2011)](https://doi.org/10.2202/1544-6115.1697) ] `pathwayPCA` allows users to:
+
+
 
 1. Test pathway association with binary, continuous, or survival phenotypes.
 2. Extract relevant genes in the pathways using the SuperPCA and AESPCA approaches.
@@ -132,26 +134,35 @@ library(pathwayPCA)
 
 ## Pathway-based PCA
 
-- Let $\textbf{X} \in \mathbb{R}_{n \times p}$ be the observed single-omics data (gene expression, protein expression, copy-number variation, etc.), where subjects are recorded in the rows and -ome features are recorded in the columns (as per the Tidy Data design of [Wickham, 2014](https://doi.org/10.18637/jss.v059.i10)).
+### Pathways and Pathway Data
+
+- Let $\textbf{X} \in \mathbb{R}_{n \times p}$ be the observed single-omics data (gene expression, protein expression, copy-number variation, etc.).
+- We follow Tidy Data design^[ [Wickham, 2014](https://doi.org/10.18637/jss.v059.i10) ] and record subjects in the rows and -ome features in the columns.
 - Based on expert knowledge of the problem at hand, curate a set of biological pathways $1, \ldots, K$, where pathway $k$ contains $p_k$ -ome measurements.
-- Consider a column-subset of $\textbf{X}$, $\textbf{X}_k \in \mathbb{R}_{n \times p_k}$, that contains all of the sample values recorded for the -omes in pathway $k$.
-- Let $\textbf{P}^{(k)}_d \in \mathbb{R}_{p_k \times d}$, for $d < p$, be the projection matrix of the $d$ eigenvectors corresponding to the largest $d$ eigenvalues of $\textbf{X}_k$. (Often we take $d = 1$, because a biological pathway should--in theory--only have one source of defined variability.)
-- The principal components matrix for pathway $k$, $\textbf{Y}_k = \textbf{X}_k\textbf{P}^{(k)}_d \in \mathbb{R}_{n \times d}$, is the transformation of the original $p_k$ features in pathway $k$ into the $d$-dimensional orthogonal subspace that preserves the most information.
-- Instead of modelling on *all* the recorded -ome values for a given pathway, we instead model on the few orthogonal PCs extracted from the pathway-specific data subsets.
+
+
+### Differences in Approach
+
+<font color="#005030">**JAMES EDIT HERE**</font>
+
+- Many tools, including <font color="#005030">**tool1**</font>^[ CITE1 ] and <font color="#005030">**tool2**</font>^[ CITE2 ], ignore expert-based biological information contained in biological pathways.
+- Other tools, such as <font color="#005030">**tool3**</font>^[ CITE3 ] and <font color="#005030">**tool4**</font>^[ CITE4 ], incorporate biological pathways *after* PCs are extracted from the entire data set. This is figuratively like putting a holiday feast into a blender and trying to taste the individual dishes: the PCs will extract global -omic signals while drowning out the effects of individual biological pathways.
+- Because biological pathways should--in theory--only have one source of defined variability, we extract a single PC from the pathway-specific data subsets
+
 
 ## AESPCA
-Adaptive, Elastic-net, Sparse PCA (AES-PCA; [Chen, 2011](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3215429)) combines into a single objective function the following methods:
+Adaptive, Elastic-net, Sparse PCA (AESPCA) combines into a single objective function the following methods:
 
-- <font color="#005030">**Elastic-Net**</font> ([Zou and Hastie, 2005](https://doi.org/10.1111/j.1467-9868.2005.00503.x))
-- <font color="#005030">**Adaptive Lasso**</font> ([Zou, 2012](https://doi.org/10.1198/016214506000000735))
-- <font color="#005030">**Sparse PCA**</font> ([Zou, Hastie, and Tibshirani, 2012](https://doi.org/10.1198/106186006X113430))
+- <font color="#005030">**Elastic-Net**</font>^[ [Zou and Hastie, 2005](https://doi.org/10.1111/j.1467-9868.2005.00503.x) ]
+- <font color="#005030">**Adaptive Lasso**</font>^[ [Zou, 2012](https://doi.org/10.1198/016214506000000735) ]
+- <font color="#005030">**Sparse PCA**</font>^[ [Zou, Hastie, and Tibshirani, 2012](https://doi.org/10.1198/106186006X113430) ]
 
-AES-PCA extracts principal components from pathway $k$ which minimize this composite objective function
+AESPCA extracts principal components from pathway $k$ which minimize this composite objective function
 
 
 ## Supervised PCA
 
-Supervised PCA (SuperPCA; [Chen et al., 2008](https://doi.org/10.1093/bioinformatics/btn458); [Chen et al., 2010](https://doi.org/10.1002/gepi.20532)):
+Supervised PCA (SuperPCA):
 
 - ranks each feature in pathway $k$ by its univariate relationship with the outcome of interest (survival time, tumor size, cancer subtype, etc.), then
 - extracts principal components from the <font color="#005030">**most relevant features**</font>
@@ -166,7 +177,7 @@ Supervised PCA (SuperPCA; [Chen et al., 2008](https://doi.org/10.1093/bioinforma
 # Case study 1: identifying significant pathways in protein expressions associated with survival outcome in ovarian cancer data
 
 ## Ovarian cancer dataset 
-For this example, we will use the mass spectrometry based global proteomics data for ovarian cancer recently generated by the Clinical Proteomic Tumor Analysis Consortium (CPTAC). The normalized protein abundance expression dataset can be obtained from the LinkedOmics database at http://linkedomics.org/data_download/TCGA-OV/. We used the dataset “Proteome (PNNL, Gene level)” which was generated by the Pacific Northwest National Laboratory (PNNL). One subject was removed due to missing survival outcome. Missing values in proteins expression data were imputed using the Bioconductor package `impute` under default settings. The final dataset consisted of 5162 protein expression values for 83 samples.
+For this example, we will use the mass spectrometry based global proteomics data for ovarian cancer recently generated by the Clinical Proteomic Tumor Analysis Consortium (CPTAC).^[<https://proteomics.cancer.gov/programs/cptac>] The normalized protein abundance expression dataset can be obtained from the LinkedOmics database.^[<http://linkedomics.org/data_download/TCGA-OV/>] We used the dataset “Proteome (PNNL, Gene level)” which was generated by the Pacific Northwest National Laboratory (PNNL).^[<https://www.pnnl.gov/>] One subject was removed due to missing survival outcome. Missing values in proteins expression data were imputed using the Bioconductor package `impute` under default settings. The final dataset consisted of 5162 protein expression values for 83 samples.
 
 ## Creating an `Omics` data object for pathway analysis
 First, we need to create an `Omics`-class data object that stores
@@ -178,22 +189,20 @@ First, we need to create an `Omics`-class data object that stores
 ### Expression and Phenotype Data
 We can obtain datasets 1 and 2 for the ovarian cancer dataset by loading the `ovarian_PNNL_survival.RDS` data file included in the `pathwayPCAdata` supplement repository: https://github.com/lizhongliu1996/pathwayPCAdata.
 ```{r loadAssay}
-gitHubPath_char <- "https://raw.githubusercontent.com/lizhongliu1996/pathwayPCAdata/master/"
-ovSurv_df <- readRDS(
-  url(paste0(gitHubPath_char, "ovarian_PNNL_survival.RDS"))
-)
+data("ovSurv_df")
 ```
 
 The `ovSurv_df` dataset is a data frame with protein expression levels and survival outcome matched by sample IDs. The variables (columns) include overall survival time and censoring status, as well as expression data for 5162 proteins for each of the 83 samples.
 ```{r printAssay, eval=TRUE}
-ovSurv_df [1:5, 1:5]
+ovSurv_df[, 1:5]
 ```
 
 ### Pathway Collections
-For the collection of pathways in (3), we need to specify a `.gmt` file, a text file with each row corresponding to one pathway. Each row contains an ID (column `TERMS`), an optional description (column `description`), and the genes in the pathway (all subsequent columns). Pathway collections in `.gmt` form can be downloaded from the MSigDB database at http://software.broadinstitute.org/gsea/msigdb/collections.jsp. 
+For the collection of pathways in (3), we need to specify a `.gmt` file, a text file with each row corresponding to one pathway. Each row contains an ID (column `TERMS`), an optional description (column `description`), and the genes in the pathway (all subsequent columns). Pathway collections in `.gmt` form can be downloaded from the MSigDB database.^[<http://software.broadinstitute.org/gsea/msigdb/collections.jsp>]
 
-For [WikiPathways](https://www.wikipathways.org/index.php/WikiPathways), one can download monthly data releases in `.gmt` format using the `dowloadPathwayArchive()` function in the `rWikiPathways` package [from Bioconductor](https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html). For example, the [following commands](https://bioconductor.org/packages/release/bioc/vignettes/rWikiPathways/inst/doc/Overview.html#4_give_me_more) downloads the latest release of the human pathways from WikiPathways to your current directory:
+For WikiPathways,^[<https://www.wikipathways.org/index.php/WikiPathways>] one can download monthly data releases in `.gmt` format using the `dowloadPathwayArchive()` function in the `rWikiPathways` package from Bioconductor. For example, the following commands^[<https://bioconductor.org/packages/release/bioc/vignettes/rWikiPathways/inst/doc/Overview.html#4_give_me_more>] downloads the latest release of the human pathways from WikiPathways to your current directory (we do not evaluate this code):
 ```{r rWikiPathways, eval=FALSE}
+# DONT RUN
 library(rWikiPathways)
 # library(XML) # necessary if you encounter an error with readHTMLTable
 downloadPathwayArchive(
@@ -220,8 +229,18 @@ wikipathways_PC <- read_gmt(
 )
 ```
 
+This pathway collection contains:
+
+1. `pathways`: a list of character vectors with the names of the -omes recorded in the assay
+2. `TERMS`: a character vector of the names of the pathways
+3. `description`: (OPTIONAL) descriptions or URLs of the pathways
+
+```{r inspectOutWikiPWC}
+wikipathways_PC
+```
+
 ### Create an `OmicsSurv` Data Container
-Now that we have these three data components, we create an `OmicsSurv` data container. Note that when `assayData_df` and `response` are supplied from two different files, the user must match and merge these data sets by sample IDs.
+Now that we have these three data components, we create an `OmicsSurv` data container. Note that when `assayData_df` and `response` are supplied from two different files, the user must match and merge these data sets by sample IDs. The assay and response must have matching row names, otherwise the function will error
 ```{r createOmics, comment=""}
 ov_OmicsSurv <- CreateOmics(
   # protein expression data
@@ -244,14 +263,14 @@ ov_OmicsSurv
 
 ## Testing pathway association with phenotypes
 ### Method Description
-Once we have a valid `Omics` object, we can perform pathway analysis using the AES-PCA (Adaptive, Elastic-net, Sparse PCA) or Supervised PCA (SuperPCA) methodology described in Chen et al. (2008), Chen et al. (2010), and Chen (2011).
+Once we have a valid `Omics` object, we can perform pathway analysis using the AESPCA or SuperPCA methodology as described above.
 
-Briefly, in the AES-PCA method, we first extract PCs representing activities within each pathway using a dimension reduction approach based on adaptive, elastic-net, sparse principal component analysis (https://doi.org/10.2202/1544-6115.1697). The estimated latent variables are then tested against phenotypes using a permutation test that permutes sample labels. Note that the AESPCA approach does not use the response information to estimate pathway PCs, so it is an unsupervised approach.
+Briefly, in the AESPCA method, we first extract PCs representing activities within each pathway using a dimension reduction approach based on adaptive, elastic-net, sparse principal component analysis. The estimated latent variables are then tested against phenotypes using either a parametric or permutation test (permuting the sample responses). Note that the AESPCA approach does not use the response information to estimate pathway PCs, so it is an unsupervised approach.
 
-This is in contrast to the SuperPCA approach, where a selected subset of genes most associated with disease outcome are used to estimate the latent variable for a pathway (https://doi.org/10.1002/gepi.20532). Because of this gene selection step, the test statistics from the SuperPCA model can no longer be approximated well using the Student's $t$-distribution. To account for the gene selection step, `pathwayPCA` estimates $p$-values from a two-component mixture of Gumbel extreme value distributions instead.
+This is in contrast to the SuperPCA approach, where a selected subset of genes most associated with disease outcome are used to estimate the latent variable for a pathway. Because of this gene selection step, the test statistics from the SuperPCA model can no longer be approximated well using the Student's $t$-distribution. To account for the gene selection step, `pathwayPCA` estimates $p$-values from a two-component mixture of Gumbel extreme value distributions instead.
 
 ### Implementation 
-Because the syntax for performing SuperPCA is nearly identical to the AES-PCA syntax, we will illustrate only the AES-PCA workflow below. 
+Because the syntax for performing SuperPCA is nearly identical to the AESPCA syntax, we will illustrate only the AESPCA workflow below. 
 
 Note that when the value supplied to the `numReps` argument is greater than 0, the `AESPCA_pvals()` function employs a parametric test when estimating pathway significance via the following model: "phenotype ~ intercept + PC1". Pathway $p$-values are estimated based on a likelihood ratio test that compares this model to a null model (with intercept only). 
 ```{r aespcaCall, comment=""}
@@ -278,7 +297,7 @@ names(ovarian_aespcOut)
 ```
 
 ### The pathway analysis results
-For this ovarian cancer dataset, the top 10 most significant pathways identified by AES-PCA are:
+For this ovarian cancer dataset, the top 10 most significant pathways identified by AESPCA are:
 ```{r headPVals}
 getPathpVals(ovarian_aespcOut, numPaths = 10)
 ```
@@ -305,7 +324,7 @@ ggplot(ovOutGather_df) +
     hjust = 0
   ) +
   # Set main and axis titles
-  ggtitle("AES-PCA Significant Pathways: Ovarian Cancer") +
+  ggtitle("AESPCA Significant Pathways: Ovarian Cancer") +
   xlab("Pathways") +
   ylab("Negative Log10 (p-Value)") +
   # Add a line showing the alpha = 0.0001 level
@@ -449,6 +468,7 @@ While copy number alterations are common genomic aberrations in ovarian carcer, 
 We can identify copy number (CNV) pathways significantly associated with survival in the same way as we did for protein expressions. This gene level CNV data was downloaded from UCSC Xena Functional Genomics Browser (http://xena.ucsc.edu/).
 
 ```{r CNVsetup}
+gitHubPath_char <- "https://raw.githubusercontent.com/lizhongliu1996/pathwayPCAdata/master/"
 copyNumberClean_df <- readRDS(
   url(paste0(gitHubPath_char, "OV_surv_x_CNV2.RDS"))
 )

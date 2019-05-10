@@ -31,14 +31,16 @@ Description: With the advance in high-throughput technology for molecular
     pathways with sex-specific effects in kidney cancer.
 Depends:
     R (>= 3.5),
-    pathwayPCA,
-    tidyverse
+    pathwayPCA
 License: Creative Commons Attribution 4.0 International License
 Encoding: UTF-8
 LazyData: true
 Suggests: 
     knitr,
     rmarkdown,
+    rWikiPathways,
     survival,
-    survminer
+    survminer,
+    tidyverse
 VignetteBuilder: knitr
+RoxygenNote: 6.1.1
