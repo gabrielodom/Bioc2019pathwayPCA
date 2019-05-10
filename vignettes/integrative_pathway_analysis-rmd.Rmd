@@ -23,8 +23,10 @@ knitr::opts_chunk$set(
 
 # Instructors
 
-* Gabriel J. Odom^[University of Miami's Miller School of Medicine, Miami, FL] (<gabriel.odom@med.miami.edu>)
-* Yuguang James Ban^[University of Miami's Sylvester Comprehensive Cancer Center, Miami, FL] (<Yuguang.ban@med.miami.edu>)
+* Dr. Gabriel J. Odom^[Department of Public Health Sciences, Miller School of Medicine, The University of Miami, Miami, FL] (<gabriel.odom@med.miami.edu>)
+* Dr. Yuguang James Ban^[Sylvester Comprehensive Cancer Center, The University of Miami, Miami, FL] (<Yuguang.ban@med.miami.edu>)
+* Prof. Lily Wang^[Department of Public Health Sciences, Miller School of Medicine; McDonald Foundation Department of Human Genetics; The University of Miami, Miami, FL] (<lily.wang@med.miami.edu>)
+* Prof. Steven Chen^[Department of Public Health Sciences, Miller School of Medicine; Sylvester Comprehensive Cancer Center; The University of Miami, Miami, FL] (<steven.chen@med.miami.edu>)
 
 
 # Workshop Description
@@ -43,39 +45,39 @@ There is a built version of this workshop available at <http://rpubs.com/gabriel
 * Basic knowledge of R syntax
 * Familiarity with RStudio
 * Familiarity with pathway analysis 
-* Knowledge of [*Principal Components Analysis*](https://en.wikipedia.org/wiki/Principal_component_analysis) (PCA) is helpful but not required
+* Knowledge of *Principal Components Analysis* (PCA)^[<https://en.wikipedia.org/wiki/Principal_component_analysis>] is helpful but not required
 
 ## Workshop Participation
 
-This will be a hands-on workshop, students will live-code with us. It would be helpful for participants to bring a laptop with RStudio and pathwayPCA package installed (https://gabrielodom.github.io/pathwayPCA/index.html#installing-the-package).
+This will be a hands-on workshop, students will live-code with us. It would be helpful for participants to bring a laptop with RStudio and pathwayPCA package installed (<https://gabrielodom.github.io/pathwayPCA/index.html#installing-the-package>).
 
 ## R/Bioconductor packages used
 
-To install the workshop dependencies, assuming you have already installed Bioconductor (www.bioconductor.org/install):
+To install the workshop dependencies, assuming you have already installed Bioconductor (<www.bioconductor.org/install>):
 ```
 install.packages(c("survival", "survminer", "tidyverse"))
 BiocManager::install("rWikiPathways")
 BiocManager::install("pathwayPCA")
 ```
 
-We also strongly recommend the [RStudio](https://www.rstudio.com/products/rstudio/download/) integrated development environment as a user-friendly graphical wrapper for R.
+We also strongly recommend the RStudio^[<https://www.rstudio.com/products/rstudio/download/>] integrated development environment as a user-friendly graphical wrapper for R. We require R version 3.6 or later.
 
 ### Package Descriptions
-* `pathwayPCA` will be covered in depth
-* [`rWikiPathways`](https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html) is a package to download and utilize the WikiPathways collection of community-defined biological pathways
-* [`survival`]() is the core CRAN package for survival analysis and censored data structures
-* [`survminer`](https://cran.r-project.org/package=survminer) is a CRAN package for drawing survival curves with `ggplot2` (included in the `tidyverse` package suite).
-* [`tidyverse` package suite](https://www.tidyverse.org/) is a collection of utility packages for data science: . (We will make use of some data constructs and ideas from these packages, but we do not expect users to be intimately familiar with Tidyverse)
+* `pathwayPCA`^[<https://gabrielodom.github.io/pathwayPCA/>] will be covered in depth
+* `rWikiPathways`^[<https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html>] is a package to download and utilize the WikiPathways collection of community-defined biological pathways
+* `survival`^[<https://CRAN.R-project.org/package=survival>] is the core CRAN package for survival analysis and censored data structures
+* `survminer`^[<https://cran.r-project.org/package=survminer>] is a CRAN package for drawing survival curves with `ggplot2` (included in the `tidyverse` package suite).
+* `tidyverse`^[<https://www.tidyverse.org/>] package suite is a collection of utility packages for data science: . (We will make use of some data constructs and ideas from these packages, but we do not expect users to be intimately familiar with Tidyverse)
 
 
 ### (Optional) Development Version
-Because we are currently in the development phase for version 2 of this package, you can install the package from GitHub. In order to install a package from GitHub, you will need the `devtools::` package (https://github.com/r-lib/devtools) and either [Rtools](https://cran.r-project.org/bin/windows/Rtools/) (for Windows) or [Xcode](https://developer.apple.com/xcode/) (for Mac). Then you can install the development version of the [`pathwayPCA` package](https://github.com/gabrielodom/pathwayPCA) from [GitHub](https://github.com/):
+Because we are currently in the development phase for version 2 of this package, you can install the package from GitHub. In order to install a package from GitHub, you will need the `devtools::`^[<https://github.com/r-lib/devtools>] package and either Rtools^[<https://cran.r-project.org/bin/windows/Rtools/>] (for Windows) or Xcode^[<https://developer.apple.com/xcode/>] (for Mac). Then you can install the development version of the `pathwayPCA` package from GitHub^[<https://github.com/>] via:
 ```
 devtools::install_github("gabrielodom/pathwayPCA")
 ```
 
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(survival)
 library(rWikiPathways)
 library(tidyverse)
