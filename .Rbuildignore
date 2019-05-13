@@ -1,2 +1,3 @@
 ^Bioc2019pathwayPCA\.Rproj$
 ^\.Rproj\.user$
+^inst/extdata/*$
