@@ -171,17 +171,18 @@ plot(x = 1:41, y = rep(0, 41), pch = 15, col = reds_char)
 palette_char <- c(blues_char, reds_char)
 plot(x = 1:83, y = rep(0, 83), pch = 15, col = palette_char)
 
-
 jointSortedRanks_df <- jointScaledRanks_df %>% 
   arrange(cnvRank)
 
 cnvCol <- palette_char[jointSortedRanks_df$cnvRank]
 protCol <- palette_char[jointSortedRanks_df$protRank]
 
+showpanel = function(col){
+  image(z=matrix(1:100, ncol=1), col=col, xaxt="n", yaxt="n" )
+}
+
 showpanel(cnvCol)
 showpanel(protCol)
-
-
 
 ######  5. Circos Plot  #######################################################
 library(circlize)
@@ -231,18 +232,18 @@ suppressMessages(
   )
 )
 
-# ##add legends 
-# par(new=TRUE)
-# par(mar = c(15,32,5,0))
-# plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'pc1 score') 
-# text(x=0.05, y = 0.09, "Red: > 0")
-# text(x=0.05, y=  0.07, "Blue: < 0")
+##add legends
+par(new=TRUE)
+par(mar = c(15,32,5,0))
+plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'pc1 score')
+text(x=0.05, y = 0.09, "Red: > 0")
+text(x=0.05, y=  0.07, "Blue: < 0")
 # par(new=TRUE)
 # par(mar = c(0,0,13,32))
-# plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'outer loop:') 
+# plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'outer loop:')
 # par(new=TRUE)
 # par(mar = c(0,0,15,32))
-# plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'copyNumber',cex=0.5) 
+# plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'copyNumber',cex=0.5)
 # par(new=TRUE)
 # par(mar = c(5,0,20,32))
 # plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'inner loop:')
