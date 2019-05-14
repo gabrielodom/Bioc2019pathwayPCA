@@ -6,7 +6,7 @@
 \title{Ovarian Cancer Clinical Data}
 \format{A data frame containing TCGA sample IDs (\code{Sample}), overall
   survival time in days (\code{OS_time}), and death indicator
-  (\code{OS_status}) copy-number values for 579 samples.}
+  (\code{OS_status}) for 565 subjects.}
 \source{
 Clinical
   \url{http://linkedomics.org/data_download/TCGA-OV/}
@@ -17,7 +17,7 @@ Clinical
 ovPheno_df
 }
 \description{
-Clinical Proteomic Tumor Analysis Consortium's the survival
+Clinical Proteomic Tumor Analysis Consortium's survival
   information from the clinical annotation data.
 }
 \keyword{datasets}

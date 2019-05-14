@@ -1,0 +1,19 @@
+#' Kidney Papillary Cell Carcinoma (KIRP) RNAseq Data
+#'
+#' @description IlluminaHiSeq data from The Cancer Genome Atlas' KIRP cohort.
+#'   Xena's description: "The gene expression profile was measured
+#'   experimentally using the Illumina HiSeq 2000 RNA Sequencing platform by
+#'   the University of North Carolina TCGA genome characterization center.
+#'   Level 3 data was downloaded from TCGA data coordination center. This
+#'   dataset shows the gene-level transcription estimates, as in \eqn{log2(x+1)}
+#'   transformed RSEM normalized counts. Genes are mapped onto the human genome
+#'   coordinates using UCSC Xena HUGO probeMap."
+#'
+#' @format A data frame containing 20530 RNAseq log-transformed counts for 323
+#'   samples. The first column is the TCGA sample IDs (\code{Sample}).
+#'
+#' @source RNAseq KIRP data from the TCGA hub as hosteb by Xena:
+#'   \url{https://xenabrowser.net/hub/}
+#'
+#'   Cleaning script: \code{inst/scripts/download_KIRP.R}
+"kirpRNAseq_df"

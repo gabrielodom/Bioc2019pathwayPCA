@@ -658,32 +658,33 @@ The accompanying Circos plot shown normalized copy number (inner circle) and pro
 `pathwayPCA` is capable of analyzing studies with multiple experimental factors. In this section, we illustrate using `pathwayPCA` to test differential association of pathway expression with survival outcome in male and female subjects.
 
 ## Data setup and AESPCA analysis
-For this example, we used TCGA KIRP RNAseq dataset downloaded from Xena datahub. First, we load the KIRP data, create an `Omics` data container, and extract first AESPC from each pathway. Because the full data is large (19.4Mb), we have moved it to a supplemental data package.
+For this example, we used IlluminaHiSeq gene expression RNAseq data from the TCGA KIRP cohort, which we downloaded from the Xena browser datahub.^[<https://xenabrowser.net/datapages/>] (This process is described in `inst/scripts/explore_KIRP.R`.) First, we load the KIRP data, create an `Omics` data container, and extract first AESPC from each pathway. 
 ```{r kidneyData}
-gitHubPath_char <- "https://raw.githubusercontent.com/lizhongliu1996/pathwayPCAdata/master/"
-kidney_df <- readRDS(
-  url(paste0(gitHubPath_char, "KIRP_Surv_RNAseq_inner.RDS"))
-)
+data("kirpPheno_df")
+data("kirpRNAseq_df")
 ```
 
 ```{r kidneyOmics, eval=FALSE}
 # Create Omics Container
 kidney_Omics <- CreateOmics(
-  assayData_df = kidney_df[, -(2:4)],
+  assayData_df = kirpRNAseq_df,
   pathwayCollection_ls = wikipathways_PC,
-  response = kidney_df[, 1:3],
+  # Exclude the gender indicator for now
+  response = kirpPheno_df[, 1:3],
   respType = "surv",
   minPathSize = 5
 )
 ```
 ```
-319 genes have variance < epsilon and will be removed. These gene(s) are: ...
+317 genes have variance < epsilon and will be removed. These gene(s) are: ...
 
 30 gene name(s) are invalid. Invalid name(s) are: ...
 
+There are 320 samples shared by the assay and phenotype data.
+
   ======  Creating object of class OmicsSurv  =======
 The input pathway database included 5831 unique features.
-The input assay dataset included 20211 features.
+The input assay dataset included 20213 features.
 Only pathways with at least 5 or more features included in the assay dataset are
   tested (specified by minPathSize parameter). There are 423 pathways which meet
   this criterion.
@@ -693,7 +694,7 @@ Because pathwayPCA is a self-contained test (PMID: 17303618), only features in
 ```
 ```{r kidneyAESPCA, eval=FALSE}
 # AESPCA
-kidney_aespcOut <- AESPCA_pVals(
+kirpRNAseq_aespcOut <- AESPCA_pVals(
   object = kidney_Omics,
   numPCs = 1,
   parallel = TRUE,
@@ -714,13 +715,12 @@ Extracting Pathway p-Values in Parallel: DONE
 Part 3: Adjusting p-Values and Sorting Pathway p-Value Data Frame
 DONE
 ```
-```{r kidneyAESPCAload, echo=FALSE}
-kidney_aespcOut <- readRDS(
-  url(paste0(gitHubPath_char, "KIRP_protein_aespcOut.RDS"))
-)
+
+Once again, this will take a few moments (on my machine, this takes 1.9 minutes over 20 cores). Rather than execute this code yourself, we have included the output object with this package:
+```{r kidneyAESPCAload}
+data("kirpRNAseq_aespcOut")
 ```
 
-<!-- This takes 1 minute and 40 seconds.  -->
 
 ## Test for sex interaction with first PC
 Next we can test whether there is differential pathway association with survival outcome for males and females by the following model,
@@ -737,9 +737,9 @@ TestIntxn <- function(pathway, pcaOut, resp_df){
   # For the given pathway, extract the PCs and loadings from the pcaOut list
   PCL_ls <- getPathPCLs(pcaOut, pathway)
   # Select and rename the PC
-  PC_df <- PCL_ls$PCs %>% select(PC1 = V1)
-  # Bind this PC to the phenotype data
-  data_df <- bind_cols(resp_df, PC_df)
+  PC_df <- PCL_ls$PCs %>% rename(PC1 = V1)
+  # Join the phenotype data to this PC
+  data_df <- inner_join(resp_df, PC_df, by = c("Sample" = "sampleID"))
   
   # Construct a survival model with sex interaction
   sex_mod <- coxph(
@@ -749,6 +749,7 @@ TestIntxn <- function(pathway, pcaOut, resp_df){
   modStats_mat <- t(
     coef(summary(sex_mod))["PC1:maleTRUE", ]
   )
+  colnames(modStats_mat) <- c("coef", "exp_coef", "se_coef", "z", "pVal")
  
   # Return a data frame of the pathway and model statistics
   list(
@@ -764,35 +765,37 @@ TestIntxn <- function(pathway, pcaOut, resp_df){
 }
 ```
 
-As an example, we can test it on patwhay WP195, 
+As an example, we can test it on pathway WP195, 
 ```{r testNewFun}
-TestIntxn("WP195", kidney_aespcOut, kidney_df[, 2:4])$model
+TestIntxn("WP195", kirpRNAseq_aespcOut, kirpPheno_df)$model
 ```
 
 We can also apply this function to a list of pathways and select the significant pathways:  
 ```{r applyTestSexFun}
-paths_char <- kidney_aespcOut$pVals_df$terms
+paths_char <- kirpRNAseq_aespcOut$pVals_df$terms
 interactions_ls <- lapply(
     paths_char,
     FUN = TestIntxn,
-    pcaOut = kidney_aespcOut,
-    resp_df = kidney_df[, 2:4]
+    pcaOut = kirpRNAseq_aespcOut,
+    resp_df = kirpPheno_df
 )
 names(interactions_ls) <- paths_char
 
-interactions_df <- 
+interactions2_df <- 
   # Take list of interactions
   interactions_ls %>% 
   # select the first element (the data frame of model stats)
   lapply(`[[`, 1) %>% 
   # stack these data frames
   bind_rows() %>% 
-  as.tibble() %>% 
+  as_tibble() %>% 
   # sort the rows by significance
-  arrange(`Pr...z..`)
+  arrange(pVal)
 
-interactions_df %>% 
-  filter(`Pr...z..` < 0.05)
+kable(
+  interactions_df %>% 
+    filter(pVal < 0.05)
+)
 ```
 
 The results showed the most significant pathway is [WP1559](https://www.wikipathways.org/index.php/Pathway:WP1559) (“TFs Regulate miRNAs related to cardiac hypertrophy”). We can inspect the model results for this pathway directly.
@@ -806,14 +809,16 @@ The results showed that although sex is not significantly associated with surviv
 For visualization, we can divide subjects according to sex and high or low PC-expression, and add a group indicator for the four groups.
 ```{r kidneySurvPlotData}
 # Bind the Pheno Data to WP1559's First PC
-kidneyWP1559_df <- bind_cols(
-  kidney_df[, 2:4],
-  getPathPCLs(kidney_aespcOut, "WP1559")$PCs %>% select(PC1 = V1)
+kidneyWP1559_df <- inner_join(
+  kirpPheno_df,
+  getPathPCLs(kirpRNAseq_aespcOut, "WP1559")$PCs,
+  by = c("Sample" = "sampleID")
 )
 
 # Add Grouping Feature
 kidneySurvWP1559grouped_df <- 
   kidneyWP1559_df %>% 
+  rename(PC1 = V1) %>% 
   # add strength indicator
   mutate(direction = ifelse(PC1 > median(PC1), "High", "Low")) %>% 
   # group by interaction of sex and strength on PC
@@ -837,7 +842,7 @@ ggsurvplot(
 )
 ```
 
-These Kaplan-Meier curves showed that while high or low pathway activities were not associated with survival in male subjects (green and purple curves, respectively), female subjects with high pathway activities (red) had significantly worse survival outcomes than those with low pathway activities (blue).
+These Kaplan-Meier curves showed that while high or low pathway activities were not significantly associated with survival in male subjects (green and purple curves, respectively), female subjects with high pathway activities (red) had significantly worse survival outcomes than those with low pathway activities (blue).
 
 </br>
 
