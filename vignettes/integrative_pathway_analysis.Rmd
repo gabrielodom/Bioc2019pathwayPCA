@@ -20,6 +20,11 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(knitr)
+library(papeR)
+```
+
 
 # Instructors
 
@@ -38,7 +43,7 @@ With the advance in high-throughput technology for molecular assays, multi-omics
 - estimate and visualize sample-specific pathway activities in ovarian cancer, and
 - identify pathways with sex-specific effects in kidney cancer.
 
-There is a built version of this workshop available at <http://rpubs.com/gabrielodom/XXXXXX>. The source is available at <https://github.com/gabrielodom/Bioc2019pathwayPCA>.
+There is a built version of this workshop available at <http://rpubs.com/gabrielodom/Bioc2019_pathwayPCA>. The source is available at <https://github.com/gabrielodom/Bioc2019pathwayPCA>.
 
 ## Pre-requisites
 
@@ -63,13 +68,20 @@ BiocManager::install("pathwayPCA")
 We also strongly recommend the RStudio^[<https://www.rstudio.com/products/rstudio/download/>] integrated development environment as a user-friendly graphical wrapper for R. We require R version 3.6 or later.
 
 ### Package Descriptions
-* `pathwayPCA`^[<https://gabrielodom.github.io/pathwayPCA/>] will be covered in depth
-* `rWikiPathways`^[<https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html>] is a package to download and utilize the WikiPathways collection of community-defined biological pathways
-* `knitr`^[<https://CRAN.R-project.org/package=knitr>] cleans up R's presentation output
-* `papeR`^[<https://CRAN.R-project.org/package=papeR>] cleans up R's fitted model output
-* `survival`^[<https://CRAN.R-project.org/package=survival>] is the core CRAN package for survival analysis and censored data structures
-* `survminer`^[<https://cran.r-project.org/package=survminer>] is a CRAN package for drawing survival curves with `ggplot2` (included in the `tidyverse` package suite).
-* `tidyverse`^[<https://www.tidyverse.org/>] package suite is a collection of utility packages for data science: . (We will make use of some data constructs and ideas from these packages, but we do not expect users to be intimately familiar with Tidyverse)
+This workshop package, `Bioc2019pathwayPCA`, depends on two packages:
+
+* `pathwayPCA`,^[<https://gabrielodom.github.io/pathwayPCA/>] and the
+* `tidyverse`.^[<https://www.tidyverse.org/>]
+
+The `tidyverse` package suite is a collection of utility packages for data science: `ggplot2`, `dplyr`, `tidyr`, `readr`, `purrr`, `tibble`, `stringr`, and `forcats`. We will make use of some data constructs and ideas from these packages, but we do not expect users to be intimately familiar with them.
+
+Additionally, because we will use survival data in our examples, we need `survival`^[<https://CRAN.R-project.org/package=survival>] and `survminer`^[<https://cran.r-project.org/package=survminer>] (for drawing survival curves with `ggplot2`).
+
+```{r, message=FALSE, warning=FALSE}
+library(survival)
+library(survminer)
+library(Bioc2019pathwayPCA)
+```
 
 
 ### (Optional) Development Version
@@ -78,16 +90,6 @@ Because we are currently in the development phase for version 2 of this package,
 devtools::install_github("gabrielodom/pathwayPCA")
 ```
 
-
-```{r, message=FALSE, warning=FALSE}
-library(knitr)
-library(papeR)
-library(survival)
-library(rWikiPathways)
-library(tidyverse)
-library(survminer)
-library(Bioc2019pathwayPCA)
-```
 
 ## Time outline
 
@@ -125,16 +127,26 @@ library(Bioc2019pathwayPCA)
 
 # Introduction
 
-`pathwayPCA` is an integrative analysis tool that implements the principal component analysis (PCA) based pathway analysis approaches.^[ [Chen et al. (2008)](https://doi.org/10.1093/bioinformatics/btn458) ] ^[ [Chen et al. (2010)](https://doi.org/10.1002/gepi.20532) ] ^[ [Chen (2011)](https://doi.org/10.2202/1544-6115.1697) ] `pathwayPCA` allows users to:
+`pathwayPCA` is an integrative analysis tool that implements the principal component analysis (PCA) based pathway analysis approaches.^[ [Chen et al. (2008)](https://doi.org/10.1093/bioinformatics/btn458) ] ^[ [Chen et al. (2010)](https://doi.org/10.1002/gepi.20532) ] ^[ [Chen (2011)](https://doi.org/10.2202/1544-6115.1697) ]
 
-
+## Uses and Benefits
+`pathwayPCA` allows users to:
 
 1. Test pathway association with binary, continuous, or survival phenotypes.
-2. Extract relevant genes in the pathways using the SuperPCA and AESPCA approaches.
-3. Compute *principal components* (PCs) based on the selected genes. These estimated latent variables represent pathway activities for individual subjects, which can then be used to perform integrative pathway analysis, such as multi-omics analysis.
-4. Extract relevant genes that drive pathway significance as well as data corresponding to these relevant genes for additional in-depth analysis.
-5. Perform analyses with enhanced computational efficiency with parallel computing and enhanced data safety with S4-class data objects.
-6. Analyze studies with complex experimental designs, with multiple covariates, and with interaction effects, e.g., testing whether pathway association with clinical phenotype is different between male and female subjects.
+2. Compute *principal components* (PCs) based on the selected genes. These estimated latent variables represent pathway activities for individual subjects, which can then be used to perform integrative pathway analysis, such as multi-omics analysis.
+3. Extract relevant genes that drive pathway significance (as well as data corresponding to these relevant genes) using the SuperPCA and AESPCA approaches for additional in-depth analysis.
+4. Analyze studies with complex experimental designs, with multiple covariates, and with interaction effects, e.g., testing whether pathway association with clinical phenotype is different between male and female subjects.
+
+
+## Main Functions
+`pathwayPCA` uses three main groups of functions: object creation, object analysis, and analysis inspection.
+
+- `CreateOmics()` creates the data object with a collection of pathways, a single -omics assay, and a clinical response data frame. `SubsetPathwayData()` can extract the pathway-specific assay values and responses for a given pathway.
+- `AESPCA_pVals()` & `SuperPCA_pVals()` execute the respective analysis on an `Omics*` object created by `CreateOmics()`.
+- `getPathPCLs()` & `getPathpVals()` extract components of the AESPCA or SuperPCA analysis results.
+
+All other functions are helper functions for these groups.
+
 
 ## Pathway-based PCA
 
@@ -145,12 +157,55 @@ library(Bioc2019pathwayPCA)
 - Based on expert knowledge of the problem at hand, curate a set of biological pathways $1, \ldots, K$, where pathway $k$ contains $p_k$ -ome measurements.
 
 
+### Pathway Collections
+Pathway collections are often stored in a `.gmt` file, a text file with each row corresponding to one pathway. Each row contains an ID (column `TERMS`), an optional description (column `description`), and the genes in the pathway (all subsequent columns). This file format is independently defined by the Broad Institute.^[<http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats>] Pathway collections in `.gmt` form can be downloaded from the MSigDB database.^[<http://software.broadinstitute.org/gsea/msigdb/collections.jsp>]
+
+For WikiPathways,^[<https://www.wikipathways.org/index.php/WikiPathways>] a collection of community-defined biological pathways, one can download monthly data releases in `.gmt` format using the `dowloadPathwayArchive()` function in the `rWikiPathways` package from Bioconductor.^[<https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html>] For example, the following commands^[<https://bioconductor.org/packages/release/bioc/vignettes/rWikiPathways/inst/doc/Overview.html#4_give_me_more>] downloads the latest release of the human pathways from WikiPathways to your current directory (we do not evaluate this code):
+```{r rWikiPathways, eval=FALSE}
+# DONT RUN
+library(rWikiPathways)
+# library(XML) # necessary if you encounter an error with readHTMLTable
+downloadPathwayArchive(
+  organism = "Homo sapiens", format = "gmt"
+) 
+```
+```
+trying URL 'http://data.wikipathways.org/current/gmt/wikipathways-20190110-gmt-Homo_sapiens.gmt'
+Content type '' length 174868 bytes (170 KB)
+downloaded 170 KB
+```
+```{r printWPgmtpath, echo=FALSE}
+print("wikipathways-20190110-gmt-Homo_sapiens.gmt")
+```
+
+`pathwayPCA` includes the June 2018 Wikipathways collection for *homo sapiens*, which can be loaded using the `read_gmt` function:  
+```{r ourWikiPWC}
+dataDir_path <- system.file(
+  "extdata", package = "pathwayPCA", mustWork = TRUE
+)
+wikipathways_PC <- read_gmt(
+  paste0(dataDir_path, "/wikipathways_human_symbol.gmt"),
+  description = TRUE
+)
+```
+
+This pathway collection contains:
+
+1. `pathways`: a list of character vectors with the names of the -omes recorded in the assay
+2. `TERMS`: a character vector of the names of the pathways
+3. `description`: (OPTIONAL) descriptions or URLs of the pathways
+
+```{r inspectOutWikiPWC}
+wikipathways_PC
+```
+
+
 ### Differences in Approach
 
 <font color="#005030">**JAMES EDIT HERE**</font>
 
-- Many tools, including <font color="#005030">**tool1**</font>^[ CITE1 ] and <font color="#005030">**tool2**</font>^[ CITE2 ], ignore expert-based biological information contained in biological pathways.
-- Other tools, such as <font color="#005030">**tool3**</font>^[ CITE3 ] and <font color="#005030">**tool4**</font>^[ CITE4 ], incorporate biological pathways *after* PCs are extracted from the entire data set. This is figuratively like putting a holiday feast into a blender and trying to taste the individual dishes: the PCs will extract global -omic signals while drowning out the effects of individual biological pathways.
+- Many tools, including **tool1**^[ CITE1 ] and **tool2**^[ CITE2 ], ignore expert-based biological information contained in biological pathways.
+- Other tools, such as **tool3**^[ CITE3 ] and **tool4**^[ CITE4 ], incorporate biological pathways *after* PCs are extracted from the entire data set. This is figuratively like putting a holiday feast into a blender and trying to taste the individual dishes: the PCs will extract global -omic signals while drowning out the effects of individual biological pathways.
 - Because biological pathways should--in theory--only have one source of defined variability, we extract a single PC from the pathway-specific data subsets
 
 
@@ -197,7 +252,7 @@ data("ovPheno_df")
 data("ovProteome_df")
 ```
 
-The `ovProteome_df` dataset is a data frame with protein expression levels and TCGA sample IDs. The variables (columns) include expression data for 4763 proteins for each of the 83 samples.
+The `ovProteome_df` dataset is a data frame with protein expression levels and TCGA sample IDs. The variables (columns) include expression data for 4763 proteins for each of the 83 primary tumour samples.
 ```{r printProtAssay}
 head(ovProteome_df[, 1:5])
 ```
@@ -208,50 +263,8 @@ ovPheno_df
 ```
 
 
-### Pathway Collections
-For the collection of pathways in (3), we need to specify a `.gmt` file, a text file with each row corresponding to one pathway. Each row contains an ID (column `TERMS`), an optional description (column `description`), and the genes in the pathway (all subsequent columns). Pathway collections in `.gmt` form can be downloaded from the MSigDB database.^[<http://software.broadinstitute.org/gsea/msigdb/collections.jsp>]
-
-For WikiPathways,^[<https://www.wikipathways.org/index.php/WikiPathways>] one can download monthly data releases in `.gmt` format using the `dowloadPathwayArchive()` function in the `rWikiPathways` package from Bioconductor. For example, the following commands^[<https://bioconductor.org/packages/release/bioc/vignettes/rWikiPathways/inst/doc/Overview.html#4_give_me_more>] downloads the latest release of the human pathways from WikiPathways to your current directory (we do not evaluate this code):
-```{r rWikiPathways, eval=FALSE}
-# DONT RUN
-library(rWikiPathways)
-# library(XML) # necessary if you encounter an error with readHTMLTable
-downloadPathwayArchive(
-  organism = "Homo sapiens", format = "gmt"
-) 
-```
-```
-trying URL 'http://data.wikipathways.org/current/gmt/wikipathways-20190110-gmt-Homo_sapiens.gmt'
-Content type '' length 174868 bytes (170 KB)
-downloaded 170 KB
-```
-```{r printWPgmtpath, echo=FALSE}
-print("wikipathways-20190110-gmt-Homo_sapiens.gmt")
-```
-
-`pathwayPCA` includes the June 2018 Wikipathways collection for *homo sapiens*, which can be loaded using the `read_gmt` function:  
-```{r ourWikiPWC}
-dataDir_path <- system.file(
-  "extdata", package = "pathwayPCA", mustWork = TRUE
-)
-wikipathways_PC <- read_gmt(
-  paste0(dataDir_path, "/wikipathways_human_symbol.gmt"),
-  description = TRUE
-)
-```
-
-This pathway collection contains:
-
-1. `pathways`: a list of character vectors with the names of the -omes recorded in the assay
-2. `TERMS`: a character vector of the names of the pathways
-3. `description`: (OPTIONAL) descriptions or URLs of the pathways
-
-```{r inspectOutWikiPWC}
-wikipathways_PC
-```
-
 ### Create an `OmicsSurv` Data Container
-Now that we have these three data components, we create an `OmicsSurv` data container. Note that when `assayData_df` and `response` are supplied from two different files, the user must match and merge these data sets by sample IDs. The assay and response must have matching row names, otherwise the function will error
+Now that we have these three data components (pathway collection, proteomics, and clinical responses), we create an `OmicsSurv` data container. Note that when `assayData_df` and `response` are supplied from two different files, the user must match and merge these data sets by sample IDs. The assay and response must have matching row names, otherwise the function will error.
 ```{r createOmics, comment=""}
 ov_OmicsSurv <- CreateOmics(
   # protein expression data
@@ -302,26 +315,26 @@ ovarian_aespcOut <- AESPCA_pVals(
 )
 ```
 
-This `ovarian_aespcOut` object contains 3 components: a table of pathway $p$-values, AESPCA-estimated PCs of each sample from each pathway, and the loadings of each protein onto the AESPCs.
+This `ovarian_aespcOut` object contains 3 components: a table of pathway $p$-values, AESPCA-estimated PCs of each sample from each pathway, and the loadings of each protein onto the AESPCs. We haven't yet added a `print()` method for these analysis outputs, so be careful.
 ```{r inspectAESPCAout}
 names(ovarian_aespcOut)
 ```
 
 ### The pathway analysis results
-For this ovarian cancer dataset, the top 5 most significant pathways identified by AESPCA are:
+For this ovarian cancer dataset, the top 20 most significant pathways identified by AESPCA are:
 ```{r headPVals, results='asis'}
 kable(
-  getPathpVals(ovarian_aespcOut, numPaths = 10)
+  getPathpVals(ovarian_aespcOut)
 )
 ```
 
-Before constructing a graph of the $p$-values, we extract the top 20 pathways (the default value for `numPaths` is 20): 
+Before constructing a graph of the $p$-values, we extract the top 10 pathways (the default value for `numPaths` is 20). The `score = TRUE` returns the negative natural logarithm of the unadjusted $p$-values for each pathway (to enhance graphical display of the top pathways).
 ```{r subset_top_genes}
-ovOutGather_df <- getPathpVals(ovarian_aespcOut, score = TRUE)
+ovOutGather_df <- getPathpVals(ovarian_aespcOut, score = TRUE, numPaths = 10)
 ```
 
-Now we plot the pathway significance level for the top 20 pathways. In this figure, `score` indicates the negative natural logarithm of the unadjusted $p$-values for each pathway.
-```{r pathway_bar_plots, fig.height = 5, fig.width = 8}
+Now we plot the pathway significance level for the top 20 pathways.
+```{r pathway_bar_plots, fig.align = 'center', fig.height = 5, fig.width = 8}
 ggplot(ovOutGather_df) +
   # set overall appearance of the plot
   theme_bw() +
@@ -335,7 +348,7 @@ ggplot(ovOutGather_df) +
   geom_text(
     aes(x = reorder(terms, score), label = reorder(description, score), y = 0.1),
     color = "white",
-    size = 2, 
+    size = 4, 
     hjust = 0
   ) +
   # Set main and axis titles
@@ -376,7 +389,7 @@ wp195Loadings_df <-
 ```
 
 Now we will construct a **col**umn chart with `ggplot2`'s `geom_col()` function.
-```{r graphLoads, fig.height = 3.6, fig.width = 6.5}
+```{r graphLoads, fig.align = 'center', fig.height = 3.6, fig.width = 6.5}
 ggplot(data = wp195Loadings_df) +
   # Set overall appearance
   theme_bw() +
@@ -400,7 +413,7 @@ Alternatively, we can also plot the correlation of each gene with first PC for e
 In the study of complex diseases, there is often considerable heterogeneity among different subjects with regard to underlying causes of disease and benefit of particular treatment. Therefore, in addition to identifying disease-relevant pathways for the entire patient group, successful (personalized) treatment regimens will also depend upon knowing if a particular pathway is dysregulated for an individual patient.
 
 To this end, we can also assess subject-specific pathway activity. As we saw earlier, the `getPathPCLs()` function also returns subject-specific estimates for the individual pathway PCs.
-```{r wp195PCs, fig.height = 3.6, fig.width = 6.5}
+```{r wp195PCs, fig.align = 'center', fig.height = 3.6, fig.width = 6.5}
 ggplot(data = wp195PCLs_ls$PCs) +
   # Set overall appearance
   theme_classic() + 
@@ -412,7 +425,7 @@ ggplot(data = wp195PCLs_ls$PCs) +
   labs(
     title = "Distribution of Sample-specific Estimate of Pathway Activities",
     subtitle = paste0(wp195PCLs_ls$pathway, ": ", wp195PCLs_ls$description),
-    x = "PC1 Value for Each Sample",
+    x = "PC1 Score for Each Sample",
     y = "Count"
   )
 ```
@@ -463,7 +476,7 @@ NFKB1_fit <- survfit(
 ```
 
 Finally, we can plot these K-M curves over NFKB1 protein expression.
-```{r NFKB1SurvPlot, message=FALSE, fig.height = 4, fig.width = 6}
+```{r NFKB1SurvPlot, message=FALSE, fig.align = 'center', fig.height = 4, fig.width = 6}
 ggsurvplot(
   NFKB1_fit,
   conf.int = FALSE, pval = TRUE,
@@ -568,7 +581,9 @@ SigBoth_df <- inner_join(PROTpvals_df, CNVpvals_df, by = "description")
 
 The results showed there are 32 pathways significantly associated with survival in both CNV and protein data. Here are the top-10 most significant pathways (sorted by protein data significance): 
 ```{r intersectPaths}
-SigBoth_df
+kable(
+  SigBoth_df
+)
 ```
 
 Similar to the protein pathway analysis shown in Section 2.3.4, we can also identify relevant genes with nonzero loadings that drives pathway significance in CNV. The "IL-1 signaling pathway" (WP195) is significant in both CNV and protein data.
@@ -612,7 +627,7 @@ NFKB1_cor
 ```
 
 We can then visualize the multi-omics relationship for the NFKB1 gene using a scatterplot.
-```{r NFKB1plot, fig.height = 4, fig.width = 4}
+```{r NFKB1plot, fig.align = 'center', fig.height = 4, fig.width = 4}
 ggplot(data = NFKB1data_df) +
   # Set overall appearance
   theme_bw() +
@@ -725,7 +740,7 @@ data("kirpRNAseq_aespcOut")
 ## Test for sex interaction with first PC
 Next we can test whether there is differential pathway association with survival outcome for males and females by the following model,
 \[
-h(t) = h_0(t) \exp\left[ \beta_0 + \beta_1\text{PC}_1 + \beta_2\text{male} + \beta_3(\text{PC}_1 \times \text{male}) \right].
+h(t) = h_0(t) \exp\left[ \beta_1\text{PC}_1 + \beta_2\text{male} + \beta_3(\text{PC}_1 \times \text{male}) \right].
 \]
 
 In this model, $h(t)$ is expected hazard at time $t$, $h_0 (t)$ is baseline hazard when all predictors are zero, variable $male$ is an indicator variable for male samples, and $PC_1$ is a pathway’s estimated first principal component based on AESPCA. 
@@ -770,7 +785,7 @@ As an example, we can test it on pathway WP195,
 TestIntxn("WP195", kirpRNAseq_aespcOut, kirpPheno_df)$model
 ```
 
-We can also apply this function to a list of pathways and select the significant pathways:  
+We can also apply this function to a list of pathways and sort the pathways by significance:  
 ```{r applyTestSexFun}
 paths_char <- kirpRNAseq_aespcOut$pVals_df$terms
 interactions_ls <- lapply(
@@ -781,7 +796,7 @@ interactions_ls <- lapply(
 )
 names(interactions_ls) <- paths_char
 
-interactions2_df <- 
+interactions_df <- 
   # Take list of interactions
   interactions_ls %>% 
   # select the first element (the data frame of model stats)
@@ -791,10 +806,14 @@ interactions2_df <-
   as_tibble() %>% 
   # sort the rows by significance
   arrange(pVal)
+```
 
+Now, we can inspect the significant pathways.
+```{r signifInteractionsTable}
 kable(
   interactions_df %>% 
-    filter(pVal < 0.05)
+    filter(pVal < 0.05),
+  caption = "Pathways with Significant Gender-PC1 Interaction"
 )
 ```
 
@@ -828,7 +847,7 @@ kidneySurvWP1559grouped_df <-
 ```
 
 Now we can plot survival curves for the four groups.
-```{r plotKidneyGroupedSurv, message=FALSE, fig.height = 5, fig.width = 7}
+```{r plotKidneyGroupedSurv, message=FALSE, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Fit the survival model
 fit <- survfit(
   Surv(time, status) ~ group,
