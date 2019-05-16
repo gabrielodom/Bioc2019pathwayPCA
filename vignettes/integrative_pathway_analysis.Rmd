@@ -36,14 +36,14 @@ library(papeR)
 
 # Workshop Description
 
-With the advance in high-throughput technology for molecular assays, multi-omics datasets have become increasingly available. In this workshop, we will demonstrate using the pathwayPCA package to perform integrative pathway-based analyses of multi-omics datasets. In particular, we will demonstrate through three case studies the capabilities of pathwayPCA to
+With the advance in high-throughput technology for molecular assays, multi-omics datasets have become increasingly available. In this workshop, we will demonstrate using the pathwayPCA package to perform integrative pathway-based analyses of multi-omics datasets. In particular, we will demonstrate through three case studies the capabilities of `pathwayPCA` to
 
 - perform pathway analysis with gene selection,
 - integrate multi-omics datasets to identify driver genes,
 - estimate and visualize sample-specific pathway activities in ovarian cancer, and
 - identify pathways with sex-specific effects in kidney cancer.
 
-There is a built version of this workshop available at <http://rpubs.com/gabrielodom/Bioc2019_pathwayPCA>. The source is available at <https://github.com/gabrielodom/Bioc2019pathwayPCA>.
+There is a built version of this workshop available at RPubs.^[<http://rpubs.com/gabrielodom/Bioc2019_pathwayPCA>] The source is available on GitHub.^[<https://github.com/gabrielodom/Bioc2019pathwayPCA>]
 
 ## Pre-requisites
 
@@ -54,11 +54,11 @@ There is a built version of this workshop available at <http://rpubs.com/gabriel
 
 ## Workshop Participation
 
-This will be a hands-on workshop, students will live-code with us. It would be helpful for participants to bring a laptop with RStudio and pathwayPCA package installed (<https://gabrielodom.github.io/pathwayPCA/index.html#installing-the-package>).
+This will be a hands-on workshop, students will live-code with us. It would be helpful for participants to bring a laptop with RStudio and pathwayPCA package installed.^[<https://gabrielodom.github.io/pathwayPCA/index.html#installing-the-package>]
 
 ## R/Bioconductor packages used
 
-To install the workshop dependencies, assuming you have already installed Bioconductor (<www.bioconductor.org/install>):
+To install the workshop dependencies, assuming you have already installed Bioconductor:^[<https://www.bioconductor.org/install>]
 ```
 install.packages(c("survival", "survminer", "tidyverse"))
 BiocManager::install("rWikiPathways")
@@ -70,8 +70,8 @@ We also strongly recommend the RStudio^[<https://www.rstudio.com/products/rstudi
 ### Package Descriptions
 This workshop package, `Bioc2019pathwayPCA`, depends on two packages:
 
-* `pathwayPCA`,^[<https://gabrielodom.github.io/pathwayPCA/>] and the
-* `tidyverse`.^[<https://www.tidyverse.org/>]
+* `pathwayPCA`,^[<https://gabrielodom.github.io/pathwayPCA/>] and 
+* the `tidyverse`.^[<https://www.tidyverse.org/>]
 
 The `tidyverse` package suite is a collection of utility packages for data science: `ggplot2`, `dplyr`, `tidyr`, `readr`, `purrr`, `tibble`, `stringr`, and `forcats`. We will make use of some data constructs and ideas from these packages, but we do not expect users to be intimately familiar with them.
 
@@ -85,7 +85,7 @@ library(Bioc2019pathwayPCA)
 
 
 ### (Optional) Development Version
-Because we are currently in the development phase for version 2 of this package, you can install the package from GitHub. In order to install a package from GitHub, you will need the `devtools::`^[<https://github.com/r-lib/devtools>] package and either Rtools^[<https://cran.r-project.org/bin/windows/Rtools/>] (for Windows) or Xcode^[<https://developer.apple.com/xcode/>] (for Mac). Then you can install the development version of the `pathwayPCA` package from GitHub^[<https://github.com/>] via:
+Because we are currently in the development phase for version 2 of this package, you can install the package from GitHub. In order to install a package from GitHub, you will need the `devtools::`^[<https://github.com/r-lib/devtools>] package and either Rtools^[<https://cran.r-project.org/bin/windows/Rtools/>] (for Windows) or Xcode^[<https://developer.apple.com/xcode/>] (for Mac). Then you can install the development version of the `pathwayPCA` package from GitHub via:
 ```
 devtools::install_github("gabrielodom/pathwayPCA")
 ```
@@ -127,7 +127,7 @@ devtools::install_github("gabrielodom/pathwayPCA")
 
 # Introduction
 
-`pathwayPCA` is an integrative analysis tool that implements the principal component analysis (PCA) based pathway analysis approaches.^[ [Chen et al. (2008)](https://doi.org/10.1093/bioinformatics/btn458) ] ^[ [Chen et al. (2010)](https://doi.org/10.1002/gepi.20532) ] ^[ [Chen (2011)](https://doi.org/10.2202/1544-6115.1697) ]
+`pathwayPCA` is an integrative analysis tool that implements PCA-based pathway analysis approaches.^[ [Chen et al. (2008)](https://doi.org/10.1093/bioinformatics/btn458) ] ^[ [Chen et al. (2010)](https://doi.org/10.1002/gepi.20532) ] ^[ [Chen (2011)](https://doi.org/10.2202/1544-6115.1697) ]
 
 ## Uses and Benefits
 `pathwayPCA` allows users to:
@@ -138,30 +138,48 @@ devtools::install_github("gabrielodom/pathwayPCA")
 4. Analyze studies with complex experimental designs, with multiple covariates, and with interaction effects, e.g., testing whether pathway association with clinical phenotype is different between male and female subjects.
 
 
+<font color="#005030">**JAMES EDIT HERE**</font>
+
+- Many tools, including **tool1**^[ CITE1 ] and **tool2**^[ CITE2 ], ignore expert-based biological information contained in biological pathways.
+- Other tools, such as **tool3**^[ CITE3 ] and **tool4**^[ CITE4 ], incorporate biological pathways *after* PCs are extracted from the entire data set. This is figuratively like putting a holiday feast into a blender and trying to taste the individual dishes: the PCs will extract global -omic signals while drowning out the effects of individual biological pathways.
+- Because biological pathways should--in theory--only have one source of defined variability, we extract a single PC from the pathway-specific data subsets.
+
+
 ## Main Functions
 
 ![](pathwayPCA_workflow.png)
 
-<!-- `pathwayPCA` uses three main groups of functions: object creation, object analysis, and analysis inspection. -->
+`pathwayPCA` uses four main groups of functions: data import and wrangling, object creation, object analysis, and analysis inspection. The main function groups are
 
-<!-- - `CreateOmics()` creates the data object with a collection of pathways, a single -omics assay, and a clinical response data frame. `SubsetPathwayData()` can extract the pathway-specific assay values and responses for a given pathway. -->
-<!-- - `AESPCA_pVals()` & `SuperPCA_pVals()` execute the respective analysis on an `Omics*` object created by `CreateOmics()`. -->
-<!-- - `getPathPCLs()` & `getPathpVals()` extract components of the AESPCA or SuperPCA analysis results. -->
+1. **Data**:
+    - `read_gmt()` imports a `.gmt` file as a pathway collection.
+    - `SE2Tidy()` extracts an assay from a `SummarizedExperiment` object,^[<https://doi.org/10.18129/B9.bioc.SummarizedExperiment>] and turns it into a "tidy" data frame.
+    - `TransposeAssay()` is a variant of the base `t()` function designed specifcially for data frames and tibbles, but it preserves row and column names after transposition.
+2. **`Omics*` Objects**:
+    - `CreateOmics()` takes in a collection of pathways, a single -omics assay, and a clinical response data frame and creates a data object of class `Omics*`.
+    - `SubsetPathwayData()` can extract the pathway-specific assay values and responses for a given pathway from an `Omics*` object.
+3. **Methods**:
+    - `AESPCA_pVals()` takes in an `Omics*` object and calculates pathway $p$-values (parametrically or non-parametrically), principal components, and loadings via AESPCA. This returns an object of class `aespcOut`.
+    - `SuperPCA_pVals()`  takes in an `Omics*` object with valid response information and calculates pathway parametric $p$-values, principal components, and loadings via SuperPCA. This returns an object of class `superpcOut`.
+4. **Results**:
+    - `getPathPCLs()` takes in an object of class `aespcOut` or `superpcOut` and the `TERMS`name of a pathway. This function extracts 1) the data frame of principal components and subject IDs for the given pathway, and 2) a data frame of sparse loadings and feature names for the given pathway.
+    - `getPathpVals()` takes in an object of class `aespcOut` or `superpcOut` and returns a table of the $p$-values and false discovery rates for each pathway.
 
-<!-- All other functions are helper functions for these groups. -->
 
+## pathwayPCA Inputs
 
-## Pathway-based PCA
+### Assay Data
 
-### Pathways and Pathway Data
+We define our assay data format in R as follows:
 
 - Let $\textbf{X} \in \mathbb{R}_{n \times p}$ be the observed single-omics data (gene expression, protein expression, copy-number variation, etc.).
 - We follow Tidy Data design^[ [Wickham, 2014](https://doi.org/10.18637/jss.v059.i10) ] and record subjects in the rows and -ome features in the columns.
-- Based on expert knowledge of the problem at hand, curate a set of biological pathways $1, \ldots, K$, where pathway $k$ contains $p_k$ -ome measurements.
+
+Use the two utility functions, `TransposeAssay()` or `SE2Tidy()`, to wrangle your assay data into appropriate form for further analysis.
 
 
 ### Pathway Collections
-Pathway collections are often stored in a `.gmt` file, a text file with each row corresponding to one pathway. Each row contains an ID (column `TERMS`), an optional description (column `description`), and the genes in the pathway (all subsequent columns). This file format is independently defined by the Broad Institute.^[<http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats>] Pathway collections in `.gmt` form can be downloaded from the MSigDB database.^[<http://software.broadinstitute.org/gsea/msigdb/collections.jsp>]
+Based on expert knowledge of the problem at hand, curate a set of biological pathways $1, \ldots, K$, where pathway $k$ contains $p_k$ -ome measurements. In the wild, these pathway collections are often stored in a `.gmt` file, a text file with each row corresponding to one pathway. Each row contains an ID (column `TERMS`), an optional description (column `description`), and the genes in the pathway (all subsequent columns). This file format is independently defined by the Broad Institute.^[<http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats>] Pathway collections in `.gmt` form can be downloaded from the MSigDB database.^[<http://software.broadinstitute.org/gsea/msigdb/collections.jsp>]
 
 For WikiPathways,^[<https://www.wikipathways.org/index.php/WikiPathways>] a collection of community-defined biological pathways, one can download monthly data releases in `.gmt` format using the `dowloadPathwayArchive()` function in the `rWikiPathways` package from Bioconductor.^[<https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html>] For example, the following commands^[<https://bioconductor.org/packages/release/bioc/vignettes/rWikiPathways/inst/doc/Overview.html#4_give_me_more>] downloads the latest release of the human pathways from WikiPathways to your current directory (we do not evaluate this code):
 ```{r rWikiPathways, eval=FALSE}
@@ -202,32 +220,12 @@ This pathway collection contains:
 wikipathways_PC
 ```
 
+## Methods
 
-### Differences in Approach
+Adaptive, Elastic-net, Sparse PCA (AESPCA) combines into a single objective function the following methods: Elastic-Net^[ [Zou and Hastie, 2005](https://doi.org/10.1111/j.1467-9868.2005.00503.x) ], Adaptive Lasso^[ [Zou, 2012](https://doi.org/10.1198/016214506000000735) ], and Sparse PCA^[ [Zou, Hastie, and Tibshirani, 2012](https://doi.org/10.1198/106186006X113430) ]. AESPCA extracts principal components from pathway $k$ which minimize this composite objective function.
 
-<font color="#005030">**JAMES EDIT HERE**</font>
+Supervised PCA (SuperPCA): ranks each feature in pathway $k$ by its univariate relationship with the outcome of interest (survival time, tumor size, cancer subtype, etc.), then extracts principal components from the most relevant features.
 
-- Many tools, including **tool1**^[ CITE1 ] and **tool2**^[ CITE2 ], ignore expert-based biological information contained in biological pathways.
-- Other tools, such as **tool3**^[ CITE3 ] and **tool4**^[ CITE4 ], incorporate biological pathways *after* PCs are extracted from the entire data set. This is figuratively like putting a holiday feast into a blender and trying to taste the individual dishes: the PCs will extract global -omic signals while drowning out the effects of individual biological pathways.
-- Because biological pathways should--in theory--only have one source of defined variability, we extract a single PC from the pathway-specific data subsets
-
-
-## AESPCA
-Adaptive, Elastic-net, Sparse PCA (AESPCA) combines into a single objective function the following methods:
-
-- **Elastic-Net**^[ [Zou and Hastie, 2005](https://doi.org/10.1111/j.1467-9868.2005.00503.x) ]
-- **Adaptive Lasso**^[ [Zou, 2012](https://doi.org/10.1198/016214506000000735) ]
-- **Sparse PCA**^[ [Zou, Hastie, and Tibshirani, 2012](https://doi.org/10.1198/106186006X113430) ]
-
-AESPCA extracts principal components from pathway $k$ which minimize this composite objective function
-
-
-## Supervised PCA
-
-Supervised PCA (SuperPCA):
-
-- ranks each feature in pathway $k$ by its univariate relationship with the outcome of interest (survival time, tumor size, cancer subtype, etc.), then
-- extracts principal components from the <font color="#005030">**most relevant features**</font>
 
 </br>
 
@@ -239,7 +237,7 @@ Supervised PCA (SuperPCA):
 # Case study 1: identifying significant pathways in protein expressions associated with survival outcome in ovarian cancer data
 
 ## Ovarian cancer dataset 
-For this example, we will use the mass spectrometry based global proteomics data for ovarian cancer recently generated by the Clinical Proteomic Tumor Analysis Consortium (CPTAC).^[<https://proteomics.cancer.gov/programs/cptac>] The gene-level, log-ratio normalized protein abundance expression dataset for tumor samples can be obtained from the LinkedOmics database.^[<http://linkedomics.org/data_download/TCGA-OV/>] We used the dataset “Proteome (PNNL, Gene level)” which was generated by the Pacific Northwest National Laboratory (PNNL).^[<https://www.pnnl.gov/>] One subject was removed due to missing survival outcome. Missing values in proteins expression data were imputed using the Bioconductor package `impute` under default settings. The final dataset consisted of 5162 protein expression values for 83 samples.
+For this example, we will use the mass spectrometry based global proteomics data for ovarian cancer recently generated by the Clinical Proteomic Tumor Analysis Consortium (CPTAC).^[<https://proteomics.cancer.gov/programs/cptac>] The gene-level, log-ratio normalized protein abundance expression dataset for tumor samples can be obtained from the LinkedOmics database.^[<http://linkedomics.org/data_download/TCGA-OV/>] We used the dataset “Proteome (PNNL, Gene level)” which was generated by the Pacific Northwest National Laboratory (PNNL).^[<https://www.pnnl.gov/>] One subject was removed due to missing survival outcome. Proteins with grater than 20%% missingness were removed from the assay. The remaining missing values were imputed using the Bioconductor package `impute` under default settings. The final dataset consisted of 5162 protein expression values for 83 samples.
 
 ## Creating an `Omics` data object for pathway analysis
 First, we need to create an `Omics`-class data object that stores
@@ -296,10 +294,11 @@ Briefly, in the AESPCA method, we first extract PCs representing activities with
 
 This is in contrast to the SuperPCA approach, where a selected subset of genes most associated with disease outcome are used to estimate the latent variable for a pathway. Because of this gene selection step, the test statistics from the SuperPCA model can no longer be approximated well using the Student's $t$-distribution. To account for the gene selection step, `pathwayPCA` estimates $p$-values from a two-component mixture of Gumbel extreme value distributions instead.
 
-### Implementation 
 Because the syntax for performing SuperPCA is nearly identical to the AESPCA syntax, we will illustrate only the AESPCA workflow below. 
 
-We estimate pathway significance via the following model: `phenotype ~ intercept + PC1`. Pathway $p$-values are estimated based on a likelihood ratio test that compares this model to a null model (with intercept only). Note that when the value supplied to the `numReps` argument is greater than 0, the `AESPCA_pvals()` function employs a non-parametric test of to assign the statistical significance of this model.
+### Implementation 
+
+We estimate pathway significance via the following model: `phenotype ~ intercept + PC1`. Pathway $p$-values are estimated based on a likelihood ratio test that compares this model to the null model `phenotype ~ intercept`. Note that when the value supplied to the `numReps` argument is greater than 0, the `AESPCA_pvals()` function employs a non-parametric, permutation-based test to assign the statistical significance of this model.
 ```{r aespcaCall, comment=""}
 ovarian_aespcOut <- AESPCA_pVals(
   # The Omics data container
@@ -371,7 +370,7 @@ wp195PCLs_ls <- getPathPCLs(ovarian_aespcOut, "WP195")
 wp195PCLs_ls
 ```
 
-The proteins with non-zero loadings can be extracted using the following lines: 
+The proteins with non-zero loadings can be extracted as follows: 
 ```{r WP195loads}
 wp195Loadings_df <- 
   wp195PCLs_ls$Loadings %>% 
