@@ -139,13 +139,16 @@ devtools::install_github("gabrielodom/pathwayPCA")
 
 
 ## Main Functions
-`pathwayPCA` uses three main groups of functions: object creation, object analysis, and analysis inspection.
 
-- `CreateOmics()` creates the data object with a collection of pathways, a single -omics assay, and a clinical response data frame. `SubsetPathwayData()` can extract the pathway-specific assay values and responses for a given pathway.
-- `AESPCA_pVals()` & `SuperPCA_pVals()` execute the respective analysis on an `Omics*` object created by `CreateOmics()`.
-- `getPathPCLs()` & `getPathpVals()` extract components of the AESPCA or SuperPCA analysis results.
+![](pathwayPCA_workflow.png)
 
-All other functions are helper functions for these groups.
+<!-- `pathwayPCA` uses three main groups of functions: object creation, object analysis, and analysis inspection. -->
+
+<!-- - `CreateOmics()` creates the data object with a collection of pathways, a single -omics assay, and a clinical response data frame. `SubsetPathwayData()` can extract the pathway-specific assay values and responses for a given pathway. -->
+<!-- - `AESPCA_pVals()` & `SuperPCA_pVals()` execute the respective analysis on an `Omics*` object created by `CreateOmics()`. -->
+<!-- - `getPathPCLs()` & `getPathpVals()` extract components of the AESPCA or SuperPCA analysis results. -->
+
+<!-- All other functions are helper functions for these groups. -->
 
 
 ## Pathway-based PCA
@@ -212,9 +215,9 @@ wikipathways_PC
 ## AESPCA
 Adaptive, Elastic-net, Sparse PCA (AESPCA) combines into a single objective function the following methods:
 
-- <font color="#005030">**Elastic-Net**</font>^[ [Zou and Hastie, 2005](https://doi.org/10.1111/j.1467-9868.2005.00503.x) ]
-- <font color="#005030">**Adaptive Lasso**</font>^[ [Zou, 2012](https://doi.org/10.1198/016214506000000735) ]
-- <font color="#005030">**Sparse PCA**</font>^[ [Zou, Hastie, and Tibshirani, 2012](https://doi.org/10.1198/106186006X113430) ]
+- **Elastic-Net**^[ [Zou and Hastie, 2005](https://doi.org/10.1111/j.1467-9868.2005.00503.x) ]
+- **Adaptive Lasso**^[ [Zou, 2012](https://doi.org/10.1198/016214506000000735) ]
+- **Sparse PCA**^[ [Zou, Hastie, and Tibshirani, 2012](https://doi.org/10.1198/106186006X113430) ]
 
 AESPCA extracts principal components from pathway $k$ which minimize this composite objective function
 
@@ -254,7 +257,7 @@ data("ovProteome_df")
 
 The `ovProteome_df` dataset is a data frame with protein expression levels and TCGA sample IDs. The variables (columns) include expression data for 4763 proteins for each of the 83 primary tumour samples.
 ```{r printProtAssay}
-head(ovProteome_df[, 1:5])
+ovProteome_df[, 1:5]
 ```
 
 The `ovPheno_df` data frame contains TCGA sample IDs and survival outcome: overall survival time and censoring status.
@@ -592,14 +595,14 @@ Similar to the protein pathway analysis shown in Section 2.3.4, we can also iden
 CNVwp195_ls <- getPathPCLs(ovCNV_aespcOut, "WP195")
 CNV195load_df <- 
   CNVwp195_ls$Loadings %>% 
-  filter(abs(PC1) > 0) %>% 
+  filter(PC1 != 0) %>% 
   rename(PC1_CNV = PC1)
 
 # Protein Loadings
 PROTwp195_ls <- getPathPCLs(ovarian_aespcOut, "WP195")
 PROT195load_df <- 
   PROTwp195_ls$Loadings %>% 
-  filter(abs(PC1) > 0) %>% 
+  filter(PC1 != 0) %>% 
   rename(PC1_PROT = PC1)
 
 # Intersection
@@ -713,7 +716,7 @@ kirpRNAseq_aespcOut <- AESPCA_pVals(
   object = kidney_Omics,
   numPCs = 1,
   parallel = TRUE,
-  numCores = 2,
+  numCores = 20,
   numReps = 0,
   adjustment = "BH"
 )

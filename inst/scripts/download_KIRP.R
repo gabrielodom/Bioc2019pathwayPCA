@@ -35,6 +35,9 @@ kidneyAssay_df <- read_delim(
   "inst/extdata/HiSeqV2",
   "\t", escape_double = FALSE, trim_ws = TRUE
 )
+# This has class "spec_tbl_df" in addition to the tibble classes. Remove this
+#   extra class via subsetting
+kidneyAssay_df <- kidneyAssay_df[]
 
 kirpRNAseq_df <- TransposeAssay(kidneyAssay_df)
 anyNA(kirpRNAseq_df)

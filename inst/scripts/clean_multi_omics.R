@@ -60,6 +60,8 @@ linkedOmics_TCGAOV_Proteomics_df <- read_delim(
   "inst/extdata/Human_TCGA_OV_PNNL_Proteome_logRatio.cct",
   "\t", escape_double = FALSE, trim_ws = TRUE
 )
+# For some bizarre reason, this object is also a "spec_tbl_df"?
+
 LOProteomicsT_df <- TransposeAssay(linkedOmics_TCGAOV_Proteomics_df) %>%
   # Replace "." with "-"
   mutate(Sample = str_replace_all(Sample, "\\.", "-"))
@@ -104,6 +106,8 @@ summary(LOProtMissing_num)
 # 0.0000  0.0000  0.0000  0.1227  0.2169  0.6024
 
 LOProtTrimT_df <- LOProteomicsT_df[, which(LOProtMissing_num < 0.2)]
+# Subsetting the LOProteomicsT_df object removes the "spec_tbl_df" class?
+
 rm(
   keepProtSamples_char,
   LOProtMissing_num,
@@ -124,10 +128,9 @@ colnames(LOProtTrim_mat) <- LOProtTrimT_df$Sample
 LOProtTrim_ls <- impute::impute.knn(LOProtTrim_mat)
 
 ovProteome_df <- TransposeAssay(
-  as.data.frame(LOProtTrim_ls$data),
-  omeNames = "row"
-) %>%
-  rownames_to_column("Sample")
+  as_tibble(LOProtTrim_ls$data, rownames = "Proteins"),
+  omeNames = "firstCol"
+)
 
 rm(LOProtTrimT_df, LOProtTrim_mat, LOProtTrim_ls)
 
@@ -143,11 +146,17 @@ linkedOmics_TCGAOV_CNV_df <- read_delim(
   "inst/extdata/Human_TCGA_OV_SCNV_GISTIC2.cct",
   "\t", escape_double = FALSE, trim_ws = TRUE
 )
+# This also has class "spec_tbl_df". I think it's from readr' import "specs"
 ovCNV_df <- TransposeAssay(linkedOmics_TCGAOV_CNV_df) %>%
   # Replace "." with "-"
   mutate(Sample = str_replace_all(Sample, "\\.", "-"))
 anyNA(ovCNV_df)
 
 rm(linkedOmics_TCGAOV_CNV_df)
+
+# When I subsetted the proteome data frame, I lose that "spec" class. From the
+#   readr 1.3.0 NEWS, subsetting removes this class and returns a regular
+#   tibble. See https://cran.r-project.org/web/packages/readr/news/news.html.
+ovCNV_df <- ovCNV_df[]
 
 # usethis::use_data(ovCNV_df)
