@@ -9,7 +9,5 @@
 #'   significance levels with the function
 #'   \code{\link[pathwayPCA]{getPathpVals}}.
 #'
-#' @import pathwayPCA
-#'
 #' @source calculated via the package vignette
 "ovCNV_aespcOut"
