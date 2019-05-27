@@ -1,0 +1,14 @@
+
+language: r
+use_bioc: true
+bioc_required: true
+r:
+  - bioc-devel
+
+sudo: true
+cache: packages
+
+notifications:
+  email:
+  recipients:
+  - gabriel.odom@med.miami.edu

@@ -25,10 +25,13 @@ knitr::opts_chunk$set(
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
 library(knitr)
 library(papeR)
+
+figDir_char <- system.file(package = "Bioc2019pathwayPCA", "vignettes")
 ```
 
+# Integrative Pathway Analysis with pathwayPCA
 
-# Instructors
+## Instructors
 
 * Dr. Gabriel J. Odom^[Department of Public Health Sciences, Miller School of Medicine, The University of Miami, Miami, FL] (<gabriel.odom@med.miami.edu>)
 * Dr. Yuguang James Ban^[Sylvester Comprehensive Cancer Center, The University of Miami, Miami, FL] (<Yuguang.ban@med.miami.edu>)
@@ -36,7 +39,7 @@ library(papeR)
 * Prof. Steven Chen^[Department of Public Health Sciences, Miller School of Medicine; Sylvester Comprehensive Cancer Center; The University of Miami, Miami, FL] (<steven.chen@med.miami.edu>)
 
 
-# Workshop Description
+## Workshop Description
 
 With the advance in high-throughput technology for molecular assays, multi-omics datasets have become increasingly available. In this workshop, we will demonstrate using the pathwayPCA package to perform integrative pathway-based analyses of multi-omics datasets. In particular, we will demonstrate through three case studies the capabilities of `pathwayPCA` to
 
@@ -47,18 +50,18 @@ With the advance in high-throughput technology for molecular assays, multi-omics
 
 There is a built version of this workshop available at RPubs.^[<http://rpubs.com/gabrielodom/Bioc2019_pathwayPCA>] The source is available on GitHub.^[<https://github.com/gabrielodom/Bioc2019pathwayPCA>]
 
-## Pre-requisites
+### Pre-requisites
 
 * Basic knowledge of R syntax
 * Familiarity with RStudio
 * Familiarity with pathway analysis 
 * Knowledge of *Principal Components Analysis* (PCA)^[<https://en.wikipedia.org/wiki/Principal_component_analysis>] is helpful but not required
 
-## Workshop participation
+### Workshop participation
 
 This will be a hands-on workshop, students will live-code with us. It would be helpful for participants to bring a laptop with RStudio and pathwayPCA package installed.^[<https://gabrielodom.github.io/pathwayPCA/index.html#installing-the-package>]
 
-## R/Bioconductor packages used
+### R/Bioconductor packages used
 
 To install the workshop dependencies, assuming you have already installed Bioconductor:^[<https://www.bioconductor.org/install>]
 ```
@@ -69,7 +72,7 @@ BiocManager::install("pathwayPCA")
 
 We also strongly recommend the RStudio^[<https://www.rstudio.com/products/rstudio/download/>] integrated development environment as a user-friendly graphical wrapper for R. We require R version 3.6 or later.
 
-### Package descriptions
+#### Package descriptions
 This workshop package, `Bioc2019pathwayPCA`, depends on two packages:
 
 * `pathwayPCA`,^[<https://gabrielodom.github.io/pathwayPCA/>] and 
@@ -86,14 +89,14 @@ library(Bioc2019pathwayPCA)
 ```
 
 
-### (OPTIONAL) Development version
+#### (OPTIONAL) Development version
 Because we are currently in the development phase for version 2 of this package, you can install the package from GitHub. In order to install a package from GitHub, you will need the `devtools::`^[<https://github.com/r-lib/devtools>] package and either Rtools^[<https://cran.r-project.org/bin/windows/Rtools/>] (for Windows) or Xcode^[<https://developer.apple.com/xcode/>] (for Mac). Then you can install the development version of the `pathwayPCA` package from GitHub via:
 ```
 devtools::install_github("gabrielodom/pathwayPCA")
 ```
 
 
-## Time outline
+### Time outline
 
 50m total
 
@@ -106,16 +109,16 @@ devtools::install_github("gabrielodom/pathwayPCA")
 | Summary and Conclusion                                               | 5m   |
 | Questions and Comments                                               | 5m   |
 
-# Workshop Goals and Objectives
+## Workshop Goals and Objectives
 
-## Learning goals
+### Learning goals
 
 * Describe PCA-based pathway analysis
 * Apply the pathwayPCA workflow in typical gene expression and copy number variations experiments
 * Perform integrative pathway-based analysis for multiple types of omics data jointly
 * Apply pathwayPCA to experiments with complex designs, such as those with covariate and/or interaction effects
 
-## Learning objectives
+### Learning objectives
 
 * Identify pathways significantly associated with survival, binary, or continuous outcome using the pathwayPCA approach
 * Prioritize genes most likely to be driver (instead of passenger) genes using integrative analysis 
@@ -124,14 +127,18 @@ devtools::install_github("gabrielodom/pathwayPCA")
 * Identify pathways with significant sex-specific effects
 
 
+</br>
 
+*******************************************************************************
+
+</br>
   
 
-# Introduction to `pathwayPCA`
+## Introduction to `pathwayPCA`
 
 `pathwayPCA` is an integrative analysis tool that implements PCA-based pathway analysis approaches.^[ [Chen et al. (2008)](https://doi.org/10.1093/bioinformatics/btn458) ] ^[ [Chen et al. (2010)](https://doi.org/10.1002/gepi.20532) ] ^[ [Chen (2011)](https://doi.org/10.2202/1544-6115.1697) ]
 
-## Features of `pathwayPCA`
+### Features of `pathwayPCA`
 `pathwayPCA` allows users to:
 
 1. Test pathway association with binary, continuous, or survival phenotypes.
@@ -157,9 +164,11 @@ Caveats for using `pathwayPCA`:
 - In general, PCA is a poor choice for binary data. Therefore, `pathwayPCA` is a poor choice for GISTIC calls (copy number data) or mutation data.
 
 
-## Main functions
+### Main functions
 
-![](pathwayPCA_workflow.png)
+```{r fig_workflow, echo=FALSE}
+include_graphics(file.path(figDir_char, "pathwayPCA_workflow.png"))
+```
 
 `pathwayPCA` uses four main groups of functions: data import and wrangling, object creation, object analysis, and analysis inspection. The main function groups are
 
@@ -178,9 +187,9 @@ Caveats for using `pathwayPCA`:
     - `getPathpVals()` takes in an object of class `aespcOut` or `superpcOut` and returns a table of the $p$-values and false discovery rates for each pathway.
 
 
-## `pathwayPCA` inputs
+### `pathwayPCA` inputs
 
-### Assay data
+#### Assay data
 
 We define our assay data format in R as follows:
 
@@ -189,6 +198,7 @@ We define our assay data format in R as follows:
 
 Use the two utility functions, `TransposeAssay()` or `SE2Tidy()`, to wrangle your assay data into appropriate form for further analysis. Here is an example of "tidying" the first assay from a `SummarizedExperiment` object:
 ```{r, eval=FALSE}
+# DONT RUN
 library(SummarizedExperiment)
 data(airway, package = "airway")
 
@@ -196,7 +206,7 @@ airway_df <- SE2Tidy(airway)
 ```
 
 
-### Pathway collections
+#### Pathway collections
 Based on expert knowledge of the problem at hand, curate a set of biological pathways $1, \ldots, K$, where pathway $k$ contains $p_k$ -ome measurements. These pathway collections are often stored in a `.gmt` file, a text file with each row corresponding to one pathway. Each row contains an ID (column `TERMS`), an optional description (column `description`), and the genes in the pathway (all subsequent columns). This file format is independently defined by the Broad Institute.^[<http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats>] Pathway collections in `.gmt` form can be downloaded from the MSigDB database.^[<http://software.broadinstitute.org/gsea/msigdb/collections.jsp>]
 
 For WikiPathways,^[<https://www.wikipathways.org/index.php/WikiPathways>] a collection of community-defined biological pathways, one can download monthly data releases in `.gmt` format using the `dowloadPathwayArchive()` function in the `rWikiPathways` package from Bioconductor.^[<https://bioconductor.org/packages/release/bioc/html/rWikiPathways.html>] For example, the following commands^[<https://bioconductor.org/packages/release/bioc/vignettes/rWikiPathways/inst/doc/Overview.html#4_give_me_more>] downloads the latest release of the human pathways from WikiPathways to your current directory (we do not evaluate this code):
@@ -238,7 +248,7 @@ This pathway collection contains:
 wikipathways_PC
 ```
 
-## Methods
+### Methods
 
 Adaptive, Elastic-net, Sparse PCA (AESPCA) combines into a single objective function the following methods: Elastic-Net^[ [Zou and Hastie, 2005](https://doi.org/10.1111/j.1467-9868.2005.00503.x) ], Adaptive Lasso^[ [Zou, 2012](https://doi.org/10.1198/016214506000000735) ], and Sparse PCA^[ [Zou, Hastie, and Tibshirani, 2012](https://doi.org/10.1198/106186006X113430) ]. AESPCA extracts principal components from pathway $k$ which minimize this composite objective function. These extracted PCs represent activities within each pathway. The estimated latent variables are then tested against phenotypes using either a parametric or permutation test (permuting the sample responses). Note that the AESPCA approach does not use the response information to estimate pathway PCs, so it is an unsupervised approach.
 
@@ -252,19 +262,19 @@ Supervised PCA (SuperPCA): ranks each feature in pathway $k$ by its univariate r
 </br>
 
 
-# Case Study 1: Identifying Significant Pathways in Protein Expressions Associated with Survival Outcome in Ovarian Cancer
+## Case Study 1: Identifying Significant Pathways in Protein Expressions Associated with Survival Outcome in Ovarian Cancer
 
-## Ovarian cancer dataset 
+### Ovarian cancer dataset 
 For this example, we will use the mass spectrometry based global proteomics data for ovarian cancer recently generated by the Clinical Proteomic Tumor Analysis Consortium (CPTAC).^[<https://proteomics.cancer.gov/programs/cptac>] The gene-level, log-ratio normalized protein abundance expression dataset for tumor samples can be obtained from the LinkedOmics database.^[<http://linkedomics.org/data_download/TCGA-OV/>] We used the dataset “Proteome (PNNL, Gene level)” which was generated by the Pacific Northwest National Laboratory (PNNL).^[<https://www.pnnl.gov/>] One subject was removed due to missing survival outcome. Proteins with greater than 20% missingness were removed from the assay. The remaining missing values were imputed using the Bioconductor package `impute` under default settings. The final dataset consisted of 5162 protein expression values for 83 samples.
 
-## Creating an `Omics` data object for pathway analysis
+### Creating an `Omics` data object for pathway analysis
 First, we need to create an `Omics`-class data object that stores
 
 (1) the expression dataset 
 (2) phenotype information for the samples
 (3) a collection of pathways 
 
-### Expression and phenotype data
+#### Expression and phenotype data
 We can obtain protein expression and phenotype datasets for the TCGA ovarian cancer dataset by downloading the raw files from the LinkedOmics website. However, for ease and to save time, we include cleaned and imputed versions of these datasets within this package (for the cleaning process, please see the `clean_multi_omics.R` file in `inst/scripts`).
 
 The `ovProteome_df` dataset is a data frame with protein expression levels and TCGA sample IDs. The variables (columns) include expression data for 4763 proteins for each of the 83 primary tumour samples.
@@ -280,7 +290,7 @@ ovPheno_df
 ```
 
 
-### Create an `OmicsSurv` data container
+#### Create an `OmicsSurv` data container
 Now that we have these three data components (pathway collection, proteomics, and clinical responses), we create an `OmicsSurv` data container. Note that when `assayData_df` and `response` are supplied from two different files, the user must match and merge these data sets by sample IDs. The assay and response must have matching row names, otherwise the function will error.
 ```{r createOmics, comment=""}
 ov_OmicsSurv <- CreateOmics(
@@ -302,10 +312,10 @@ To see a summary  of the `Omics` data object we just created, simply type the na
 ov_OmicsSurv
 ```
 
-## Testing pathway association with phenotypes {#test_path_assoc}
+### Testing pathway association with phenotypes {#test_path_assoc}
 Once we have a valid `Omics` object, we can perform pathway analysis using the AESPCA or SuperPCA methodology as described above. Because the syntax for performing SuperPCA is nearly identical to the AESPCA syntax, we will illustrate only the AESPCA workflow below.
 
-### Implementation 
+#### Implementation 
 
 We estimate pathway significance via the following model: `phenotype ~ intercept + PC1`. Pathway $p$-values are estimated based on a likelihood ratio test that compares this model to the null model `phenotype ~ intercept`. Note that when the value supplied to the `numReps` argument is greater than 0, the `AESPCA_pvals()` function employs a non-parametric, permutation-based test to assign the statistical significance of this model.
 ```{r aespcaCall, comment=""}
@@ -331,7 +341,7 @@ This `ovarian_aespcOut` object contains 3 components: a table of pathway $p$-val
 names(ovarian_aespcOut)
 ```
 
-### Table of pathway analysis results
+#### Table of pathway analysis results
 For this ovarian cancer dataset, the top 20 most significant pathways identified by AESPCA are:
 ```{r headPVals, results='asis'}
 kable(
@@ -340,7 +350,7 @@ kable(
 ```
 
 
-### (OPTIONAL) Column chart of significant pathways
+#### (OPTIONAL) Column chart of significant pathways
 Before constructing a graph of the $p$-values, we extract the top 10 pathways (the default value for `numPaths` is 20). The `score = TRUE` returns the negative natural logarithm of the unadjusted $p$-values for each pathway (to enhance graphical display of the top pathways).
 ```{r subset_top_genes}
 ovOutGather_df <- getPathpVals(ovarian_aespcOut, score = TRUE, numPaths = 10)
@@ -372,7 +382,7 @@ ggplot(ovOutGather_df) +
   coord_flip()
 ```
 
-### Extract relevant genes from significant pathways {#extr_rel_genes}
+#### Extract relevant genes from significant pathways {#extr_rel_genes}
 Because pathways are defined *a priori*, typically only a subset of genes within each pathway are relevant to the phenotype and contribute to pathway significance. In AESPCA, these relevant genes are the genes with nonzero loadings in the first PC of AESPCs.
 
 For example, for the "IL-1 signaling pathway" (Wikipathways WP195^[<https://www.wikipathways.org/index.php/Pathway:WP195>]), we can extract the **PC**s and their protein **L**oadings using the `getPathPCLs()` function:
@@ -390,7 +400,7 @@ wp195Loadings_df
 ```
 
 
-### (OPTIONAL) Plot protein loadings for a single pathway
+#### (OPTIONAL) Plot protein loadings for a single pathway
 We can also prepare these loadings for graphics: 
 ```{r loadDirections}
 wp195Loadings_df <- 
@@ -424,7 +434,7 @@ ggplot(data = wp195Loadings_df) +
 
 Alternatively, we can also plot the correlation of each gene with first PC for each gene. These correlations can be computed by using the `TidyCorrelation()` function in `pathwayPCA`'s vignette “Chapter 5 - Visualizing the Results”, Section 3.3.^[<https://gabrielodom.github.io/pathwayPCA/articles/Supplement5-Analyse_Results.html#gene-correlations-with-pcs>]
 
-### Subject-specific PCA estimates {#subj_spec_scores}
+#### Subject-specific PCA estimates {#subj_spec_scores}
 In the study of complex diseases, there is often considerable heterogeneity among different subjects with regard to underlying causes of disease and benefit of particular treatment. Therefore, in addition to identifying disease-relevant pathways for the entire patient group, successful (personalized) treatment regimens will also depend upon knowing if a particular pathway is dysregulated for an individual patient.
 
 To this end, we can also assess subject-specific pathway activity. As we saw earlier, the `getPathPCLs()` function also returns subject-specific estimates for the individual pathway PCs.
@@ -447,7 +457,7 @@ ggplot(data = wp195PCLs_ls$PCs) +
 
 This graph shows there can be considerable heterogeneity in pathway activities between the patients. 
 
-### (OPTIONAL) Extract analysis dataset for entire pathway
+#### (OPTIONAL) Extract analysis dataset for entire pathway
 Users are often also interested in examining the actual data used for analysis of the top pathways, especially for the relevant genes with the pathway. To extract this dataset, we can use the `SubsetPathwayData()` function. These commands extract data for the IL-1 signaling pathway:
 ```{r subsetWP195data}
 wp195Data_df <- SubsetPathwayData(ov_OmicsSurv, "WP195")
@@ -473,7 +483,7 @@ ggplot(wp195gather_df, aes(x = protein, y = sampleID)) +
 ```
 
 
-### Gene-specific CoxPH model
+#### Gene-specific CoxPH model
 We can also perform analysis for individual genes belonging to the pathway: 
 ```{r dataSubsetMod}
 library(survival)
@@ -497,7 +507,7 @@ kable(wp195pretty_mod)
 ```
 
 
-### (OPTIONAL) Gene-specific survival curves
+#### (OPTIONAL) Gene-specific survival curves
 Additionally, we can estimate Kaplan-Meier survival curves for patients with high or low expression values for individual genes: 
 ```{r NFKB1Surv}
 NFKB1_df <- 
@@ -536,10 +546,10 @@ ggsurvplot(
 </br>
 
 
-# Case study 2: An Integrative Multi-Omics Pathway Analysis of Ovarian Cancer Survival
-While copy number alterations are common genomic aberrations in ovarian carcer, recent studies have shown these changes do not necessarily lead to concordant changes in protein expression. In [Section 5.3](#test_path_assoc) above, we illustrated testing pathway activities in protein expression against survival outcome. In this section, we will additionally test pathway activities in copy number against survival outcome. Moreover, we will perform integrative analysis to identify those survival -associated protein pathways, genes, and samples driven by copy number alterations.
+## Case study 2: An Integrative Multi-Omics Pathway Analysis of Ovarian Cancer Survival
+While copy number alterations are common genomic aberrations in ovarian carcer, recent studies have shown these changes do not necessarily lead to concordant changes in protein expression. In [Section XX.5.3](#test_path_assoc) above, we illustrated testing pathway activities in protein expression against survival outcome. In this section, we will additionally test pathway activities in copy number against survival outcome. Moreover, we will perform integrative analysis to identify those survival -associated protein pathways, genes, and samples driven by copy number alterations.
 
-## Creating copy number `Omics` data object 
+### Creating copy number `Omics` data object 
 We can identify copy number (CNV) pathways significantly associated with survival in the same way as we did for protein expressions. This gene-level CNV data was downloaded from the same LinkedOmics database.
 
 ```{r CNVsetup}
@@ -549,6 +559,7 @@ ovCNV_df[, 1:5]
 
 And now we create an `Omics` data container.
 ```{r CNVomics, eval=FALSE}
+# DONT RUN
 ovCNV_Surv <- CreateOmics(
   assayData_df = ovCNV_df,
   pathwayCollection_ls = wikipathways_PC,
@@ -573,9 +584,10 @@ Because pathwayPCA is a self-contained test (PMID: 17303618), only features in
   such features shared by the input assay and pathway database.
 ```
 
-### AESPCA pathway analysis for copy-number data
+#### AESPCA pathway analysis for copy-number data
 Finally, we can apply the AESPCA method to this copy-number data container. Due to the large sample size, this will take a few moments.
 ```{r CNV_aespca, eval=FALSE}
+# DONT RUN
 ovCNV_aespcOut <- AESPCA_pVals(
   object = ovCNV_Surv,
   numPCs = 1,
@@ -603,7 +615,7 @@ Rather than execute this code yourself, we have included the output object with 
 data(ovCNV_aespcOut)
 ```
 
-## Combine significant pathways from CNV and protein analyses
+### Combine significant pathways from CNV and protein analyses
 Next, we identify the intersection of significant pathways based on both CNV and protein data. First, we will create a data frame of the pathway $p$-values from both CNV and proteomics.
 ```{r multiOmicsPvals}
 # Copy Number
@@ -628,12 +640,12 @@ SigBoth_df <- inner_join(PROTpvals_df, CNVpvals_df, by = "description")
 The results showed there are 32 pathways significantly associated with survival in both CNV and protein data, which is significantly more than expected by chance (*p*-value = 0.00065; Fisher's Exact Test; shown in `multi_pathway_overlap_fishers.R`). Here are the top-10 most significant pathways (sorted by protein data significance): 
 ```{r intersectPaths}
 kable(
-  SigBoth_df
+  SigBoth_df[1:10, ]
 )
 ```
 
-### Integrative pathway-based gene detection
-Similar to the protein pathway analysis shown in [Section 5.3.4](#extr_rel_genes), we can also identify relevant genes with nonzero loadings that drives pathway significance in CNV. The "IL-1 signaling pathway" (WP195) is significant in both CNV and protein data, so we look for genes with non-zero loadings in both.
+#### Integrative pathway-based gene detection
+Similar to the protein pathway analysis shown in [Section XX.5.3](#extr_rel_genes), we can also identify relevant genes with nonzero loadings that drives pathway significance in CNV. The "IL-1 signaling pathway" (WP195) is significant in both CNV and protein data, so we look for genes with non-zero loadings in both.
 ```{r wp195}
 # Copy Number Loadings
 CNVwp195_ls <- getPathPCLs(ovCNV_aespcOut, "WP195")
@@ -656,7 +668,7 @@ inner_join(CNV195load_df, PROT195load_df)
 The result showed that NFKB1 is one of the genes selected by AESPCA when testing IL-1 signaling pathway (WP195) against survival outcome in both CNV and protein pathway analysis.
 
 
-### (OPTIONAL) Gene-specific relationships
+#### (OPTIONAL) Gene-specific relationships
 Because the proteomics data were recorded on a subset of the subjects shown in the copy number data, we can further examine the relationship between CNV and protein expressions for this gene.
 ```{r mergeGene}
 NFKB1data_df <- inner_join(
@@ -704,11 +716,13 @@ ggplot(data = NFKB1data_df) +
 ```
 
 
-## (OPTIONAL) Integrating sample-specific pathway activities
+### (OPTIONAL) Integrating sample-specific pathway activities
 
-In [Section 5.3.6](#subj_spec_scores), we have seen that there can be considerable heterogeneity in pathway activities between patients. One possible reason could be that copy number changes might not result in changes in protein expression for some of the patients. `pathwayPCA` can be used to estimate pathway activities for each patient, both for protein expressions and copy number expressions separately. These estimates can then be viewed jointly using a Circos plot.
+In [Section XX.5.3](#subj_spec_scores), we have seen that there can be considerable heterogeneity in pathway activities between patients. One possible reason could be that copy number changes might not result in changes in protein expression for some of the patients. `pathwayPCA` can be used to estimate pathway activities for each patient, both for protein expressions and copy number expressions separately. These estimates can then be viewed jointly using a Circos plot.
 
-![](circosPlot.PNG){width=100%}
+```{r fig_circos, echo=FALSE}
+include_graphics(file.path(figDir_char, "circosPlot.PNG"))
+```
 
 The accompanying Circos plot shown normalized copy number (inner circle) and protein expression (outer circle) pathway activities for the IL-1 signaling pathway in the ovarian cancer dataset samples. Each bar corresponds to a patient sample. Red bars indicate lower expression values and negative pathway activity for the sample, while blue color bars indicate higher expression values and stronger pathway activity for the sample. Note that only some patients have concordant changes in copy number and protein expression. The code to make this plot is included in `inst/scripts/circle_plot.R`.
 
@@ -719,10 +733,10 @@ The accompanying Circos plot shown normalized copy number (inner circle) and pro
 </br>
 
 
-# (OPTIONAL) Case Study 3: Analysis of Studies with Complex Designs
+## (OPTIONAL) Case Study 3: Analysis of Studies with Complex Designs
 `pathwayPCA` is capable of analyzing studies with multiple experimental factors. In this section, we illustrate using `pathwayPCA` to test differential association of pathway expression with survival outcome in male and female subjects.
 
-## Data setup and AESPCA analysis
+### Data setup and AESPCA analysis
 For this example, we used IlluminaHiSeq gene expression RNAseq data from the TCGA KIRP cohort, which we downloaded from the Xena browser datahub.^[<https://xenabrowser.net/datapages/>] (This process is described in `inst/scripts/explore_KIRP.R`.) First, we load the KIRP data, create an `Omics` data container, and extract first AESPC from each pathway. 
 ```{r kidneyData}
 data("kirpPheno_df")
@@ -730,7 +744,7 @@ data("kirpRNAseq_df")
 ```
 
 ```{r kidneyOmics, eval=FALSE}
-# Create Omics Container
+# DONT RUN
 kidney_Omics <- CreateOmics(
   assayData_df = kirpRNAseq_df,
   pathwayCollection_ls = wikipathways_PC,
@@ -758,7 +772,7 @@ Because pathwayPCA is a self-contained test (PMID: 17303618), only features in
   such features shared by the input assay and pathway database.
 ```
 ```{r kidneyAESPCA, eval=FALSE}
-# AESPCA
+# DONT RUN
 kirpRNAseq_aespcOut <- AESPCA_pVals(
   object = kidney_Omics,
   numPCs = 1,
@@ -787,7 +801,7 @@ data("kirpRNAseq_aespcOut")
 ```
 
 
-## Test for sex interaction with first PC
+### Test for sex interaction with first PC
 Next we can test whether there is differential pathway association with survival outcome for males and females by the following model,
 \[
 h(t) = h_0(t) \exp\left[ \beta_1\text{PC}_1 + \beta_2\text{male} + \beta_3(\text{PC}_1 \times \text{male}) \right].
@@ -874,7 +888,7 @@ summary(interactions_ls[["WP1559"]]$model)
 
 The results showed that although sex is not significantly associated with survival outcome, the association of pathway gene expression (PC1) with survival is highly dependent on sex of the samples.
 
-## Survival curves by sex interaction
+### Survival curves by sex interaction
 For visualization, we can divide subjects according to sex and high or low PC-expression, and add a group indicator for the four groups.
 ```{r kidneySurvPlotData}
 # Bind the Pheno Data to WP1559's First PC
@@ -923,7 +937,7 @@ These Kaplan-Meier curves showed that while high or low pathway activities were 
 </br>
 
 
-# Further Reading
+## Further Reading
 
 For addtional information on `pathwayPCA`, please see each of our supplementary vignette chapters for detailed tutorials on each of the three topics discussed above. These vignettes are:
 
@@ -932,7 +946,7 @@ For addtional information on `pathwayPCA`, please see each of our supplementary 
 - [Chapter 4: Test Pathway Significance](https://gabrielodom.github.io/pathwayPCA/articles/Supplement4-Methods_Walkthrough.html)
 - [Chapter 5: Visualizing the Results](https://gabrielodom.github.io/pathwayPCA/articles/Supplement5-Analyse_Results.html)
 
-# References
+## References
 Chen, X., Wang, L., Smith, J.D. and Zhang, B. (2008) Supervised principal component analysis for gene set enrichment of microarray data with continuous or survival outcomes. Bioinformatics, 24, 2474-2481.
 
 Chen, X., Wang, L., Hu, B., Guo, M., Barnard, J. and Zhu, X. (2010) Pathway-based analysis for genome-wide association studies using supervised principal components. Genetic epidemiology, 34, 716-724.
