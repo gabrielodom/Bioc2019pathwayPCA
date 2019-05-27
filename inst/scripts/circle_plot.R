@@ -24,29 +24,29 @@ wikipathways_PC <- read_gmt(
 
 # copyNumberClean_df <- read_csv("OV_surv_x_copyNumber.csv")
 # proteo_df <- read_csv("OV_surv_x_PNNLproteome_imputed.csv")
-# 
-# 
+#
+#
 # ##choose c2 pathway
 # PWCs_char <- c(c2   = "c2.cp.v6.0.symbols.gmt")
 # pw <- "c2"
 # PWC <- read_gmt(
 #   paste0("../PathwayCollections/", PWCs_char[pw])
 # )
-# 
+#
 # ####2. check whether copynumber and Proteomics are match samples
 # nrow(proteo_df)  #83 rows
 # nrow(copyNumberClean_df) #564 rows
 # copyNumberClean_df$Sample[1:10]
 # proteo_df$Sample[1:10]
-# 
+#
 # ##subset "-" then convert into "."
 # loci<-str_locate_all(copyNumberClean_df$Sample[1],"-")[[1]][3,1]
 # name1<-str_sub(copyNumberClean_df$Sample,1,loci-1)
 # name2<-str_replace_all(name1,"-",".")
-# sum(name2 %in% proteo_df$Sample) #83 = nrow of proteo_df 
+# sum(name2 %in% proteo_df$Sample) #83 = nrow of proteo_df
 # copyNumberClean_df$Sample <-name2
 # #so they are matched samples!!!
-# 
+#
 # ####3. match samples
 # logi<-name2 %in% proteo_df$Sample
 # copyNumberSubset<-copyNumberClean_df[logi,]
@@ -104,56 +104,57 @@ Sys.time() - a2 # 0.4 min
 ######  3. Join PC Values  ####################################################
 # The IL-1 signaling pathway is coded as WP195.
 
-cnvIL1PC1_df <- getPathPCLs(c2copyNum_aespca, "WP195")$PCs %>% 
+cnvIL1PC1_df <- getPathPCLs(c2copyNum_aespca, "WP195")$PCs %>%
   rename(cnvPC1 = V1)
-protIL1PC1_df  <- getPathPCLs(c2proteo_aespca, "WP195")$PCs %>% 
+protIL1PC1_df  <- getPathPCLs(c2proteo_aespca, "WP195")$PCs %>%
   rename(protPC1 = V1)
 
 jointPC1_df <- inner_join(
   cnvIL1PC1_df,
   protIL1PC1_df,
   by = "sampleID"
-) 
+)
 
 jointPC1_df[, -1] <- scale(jointPC1_df[, -1])
-jointScaledRanks_df <- jointPC1_df %>% 
-  mutate(cnvRank = rank(cnvPC1)) %>% 
+jointScaledRanks_df <- jointPC1_df %>%
+  mutate(cnvRank = rank(cnvPC1)) %>%
   mutate(protRank = rank(protPC1))
 
 
 # ####4.select one pathway, extract genes data of this pathway
 # ##consider choose "PID_IL2_PI3K_PATHWAY" pathway
-# PWC$pathways[[which(PWC$TERMS=="PID_IL1_PATHWAY")]] #34 genes inside this pathway
+# ##34 genes inside this pathway
+# PWC$pathways[[which(PWC$TERMS=="PID_IL1_PATHWAY")]]
 # PWC[["PID_IL1_PATHWAY"]]
-# 
-# ## for copynumber, find the pc1 scores 
+#
+# ## for copynumber, find the pc1 scores
 # c2copyNumPC1<-getPathPCLs(c2copyNum_aespca, "PID_IL1_PATHWAY")$PCs
-# 
-# ## for protomecs, find the pc1 scores 
+#
+# ## for protomecs, find the pc1 scores
 # c2ProteoPC1<-getPathPCLs(c2proteo_aespca, "PID_IL1_PATHWAY")$PCs
-# 
+#
 # ##merge data and tidy into a data frame
 # # NOTE: I (Gabriel) don't think this is correct...
 # all.equal(cnvIL1PC1_df$sampleID[1:83], protIL1PC1_df$sampleID)
 # # Nope.
 # lizhong_totalPC<-cbind(copyNumberSubset$Sample,c2copyNumPC1[,2],c2ProteoPC1[,2])
 # colnames(lizhong_totalPC)<-c("sample","c2copyNumPC1","c2ProteoPC1")
-# 
+#
 # ##z-tranform for PC1 scores
 # set.seed(5000)
 # lizhong_totalPC$TransC2CopyNumPC1 <- scale(lizhong_totalPC$c2copyNumPC1)
 # lizhong_totalPC$TransC2ProteoPC1 <- scale(lizhong_totalPC$c2ProteoPC1)
-# 
+#
 ##set color scale
-# 
+#
 # lizhong_totalPC <- lizhong_totalPC[order(lizhong_totalPC$TransC2ProteoPC1),]
 # lizhong_totalPC$proteinOrder <- order(lizhong_totalPC$TransC2ProteoPC1)
 # lizhong_totalPC <- lizhong_totalPC[order(lizhong_totalPC$TransC2CopyNumPC1),]
 # lizhong_totalPC$copyNumOrder <- order(lizhong_totalPC$TransC2CopyNumPC1)
-# 
+#
 # sum(lizhong_totalPC$TransC2CopyNumPC1>0)  #38 pos
 # sum(lizhong_totalPC$TransC2CopyNumPC1<0)  #45 neg
-# 
+#
 # saveRDS(lizhong_totalPC,"lizhong_totalPC.RDS")
 
 
@@ -171,14 +172,17 @@ plot(x = 1:41, y = rep(0, 41), pch = 15, col = reds_char)
 palette_char <- c(blues_char, reds_char)
 plot(x = 1:83, y = rep(0, 83), pch = 15, col = palette_char)
 
-jointSortedRanks_df <- jointScaledRanks_df %>% 
+jointSortedRanks_df <- jointScaledRanks_df %>%
   arrange(cnvRank)
 
 cnvCol <- palette_char[jointSortedRanks_df$cnvRank]
 protCol <- palette_char[jointSortedRanks_df$protRank]
 
 showpanel = function(col){
-  image(z=matrix(1:100, ncol=1), col=col, xaxt="n", yaxt="n" )
+  image(
+    z = matrix(seq_len(100), ncol = 1),
+    col = col, xaxt = "n", yaxt = "n"
+  )
 }
 
 showpanel(cnvCol)
@@ -233,11 +237,16 @@ suppressMessages(
 )
 
 ##add legends
-par(new=TRUE)
-par(mar = c(15,32,5,0))
-plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'pc1 score')
-text(x=0.05, y = 0.09, "Red: > 0")
-text(x=0.05, y=  0.07, "Blue: < 0")
+par(new = TRUE)
+par(mar = c(15, 32, 5, 0))
+plot(
+  x = c(0, 0.1), y = c(0, 0.1),
+  type = "n", xlab = "", ylab = "",
+  axes = FALSE,
+  main = "pc1 score"
+)
+text(x = 0.05, y = 0.09, "Red: > 0")
+text(x = 0.05, y = 0.07, "Blue: < 0")
 # par(new=TRUE)
 # par(mar = c(0,0,13,32))
 # plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'outer loop:')

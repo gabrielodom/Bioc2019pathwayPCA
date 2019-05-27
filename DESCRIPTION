@@ -30,7 +30,7 @@ Description: With the advance in high-throughput technology for molecular
     sample-specific pathway activities in ovarian cancer, and 4) identify
     pathways with sex-specific effects in kidney cancer.
 Depends:
-    R (>= 3.5),
+    R (>= 3.6),
     pathwayPCA,
     tidyverse
 License: Creative Commons Attribution 4.0 International License
@@ -43,5 +43,7 @@ Suggests:
     rWikiPathways,
     survival,
     survminer
+biocViews:
+    BasicWorkflow
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
