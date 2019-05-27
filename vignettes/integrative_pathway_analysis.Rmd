@@ -142,12 +142,12 @@ devtools::install_github("gabrielodom/pathwayPCA")
 
 What makes `pathwayPCA` different from other tools?
 
-- `pathwayPCA` does not pre-filter features before analysis, unlike DAVID, IPA, Enrichr, goseq, and other over-representative analysis methods.^[**CITE ALL**]
+- `pathwayPCA` does not pre-filter features before analysis, unlike DAVID,^[<https://david.ncifcrf.gov/>] IPA,^[<https://www.qiagenbioinformatics.com/products/ingenuity-pathway-analysis/>] Enrichr,^[<http://amp.pharm.mssm.edu/Enrichr/>] `goseq`,^[<https://bioconductor.org/packages/release/bioc/html/goseq.html>] and other over-representative analysis methods.
 - Many tools, including `globaltest`^[<https://doi.org/10.18129/B9.bioc.globaltest>], ignore expert-based biological information and fail to consider gene-gene correlations contained in biological pathways.
-- Other tools, such as MOFA,^[<https://bioconductor.org/packages/devel/bioc/html/MOFA.html>] mixOmics,^[<https://www.bioconductor.org/packages/release/bioc/html/mixOmics.html>] mogsa^[<https://bioconductor.org/packages/release/bioc/html/mogsa.html>], incorporate biological pathways *after* analysis is performed (for instance, PCs are extracted from the entire data set rather than a pathway-subset).
+- Other tools, such as `MOFA`,^[<https://bioconductor.org/packages/devel/bioc/html/MOFA.html>] `mixOmics`,^[<https://www.bioconductor.org/packages/release/bioc/html/mixOmics.html>] `mogsa`^[<https://bioconductor.org/packages/release/bioc/html/mogsa.html>], incorporate biological pathways *after* analysis is performed (for instance, PCs are extracted from the entire data set rather than a pathway-subset).
     + This is figuratively like putting a holiday feast into a blender and trying to taste the individual dishes: the PCs will extract global -omic signals while drowning out the effects of individual biological pathways.
     + Because biological pathways should--in theory--only have one source of defined variability, we extract a single PC from the pathway-specific data subsets.
-- Some tools require additional software other than R packages to run, such as CoGAPS^[<https://www.bioconductor.org/packages/release/bioc/html/CoGAPS.html>] (requires OpenMP) or MOFA (requires Python).
+- Some tools require additional software other than R packages to run, such as `CoGAPS`^[<https://www.bioconductor.org/packages/release/bioc/html/CoGAPS.html>] (requires OpenMP) or `MOFA` (requires Python).
 
 
 ## Main functions
@@ -485,10 +485,12 @@ kable(wp195pretty_mod)
 ### (OPTIONAL) Gene-specific survival curves
 Additionally, we can estimate Kaplan-Meier survival curves for patients with high or low expression values for individual genes: 
 ```{r NFKB1Surv}
-# Add the direction
 NFKB1_df <- 
   NFKB1_df %>% 
-  mutate(NFKB1_Expr = ifelse(NFKB1 > median(NFKB1), "High", "Low"))
+  # Group subjects by gene expression
+  mutate(NFKB1_Expr = ifelse(NFKB1 > median(NFKB1), "High", "Low")) %>% 
+  # Re-code time to years
+  mutate(EventTime = EventTime / 365.25)
 
 # Fit the survival model
 NFKB1_fit <- survfit(
@@ -505,7 +507,7 @@ ggsurvplot(
   conf.int = FALSE, pval = TRUE,
   # Show times to median survival
   surv.median.line = "hv",
-  xlab = "Time in Days",
+  xlab = "Time in Years",
   palette = c("#f47321", "#005030")
 )
 ```
@@ -606,7 +608,7 @@ SigBoth_df <- inner_join(PROTpvals_df, CNVpvals_df, by = "description")
 ```
 
 
-The results showed there are 32 pathways significantly associated with survival in both CNV and protein data. Here are the top-10 most significant pathways (sorted by protein data significance): 
+The results showed there are 32 pathways significantly associated with survival in both CNV and protein data (*p*-value = 0.02088; Fisher's Exact Test). Here are the top-10 most significant pathways (sorted by protein data significance): 
 ```{r intersectPaths}
 kable(
   SigBoth_df
@@ -873,6 +875,8 @@ kidneySurvWP1559grouped_df <-
   mutate(direction = ifelse(PC1 > median(PC1), "High", "Low")) %>% 
   # group by interaction of sex and strength on PC
   mutate(group = paste0(direction, ifelse(male, "_Male", "_Female"))) %>% 
+  # recode time in years
+  mutate(time = time / 365.25) %>% 
   # remove summarized columns
   select(-male, -PC1, -direction)
 ```
@@ -887,8 +891,9 @@ fit <- survfit(
 
 ggsurvplot(
   fit, conf.int = FALSE, 
-  xlab = "Time in Days",
-  ylim = c(0.4, 1)
+  xlab = "Time in Years",
+  ylim = c(0.4, 1),
+  xlim = c(0, 10)
 )
 ```
 
