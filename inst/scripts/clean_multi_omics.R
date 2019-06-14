@@ -50,8 +50,6 @@ rm(linkedOmics_TCGAOVPheno_df, LOPhenoT_df, LOsurv_df)
 
 # usethis::use_data(ovPheno_df)
 
-
-
 ######  Proteomics  ###########################################################
 # The "firehose" name for this file is:
 # Human__TCGA_OV__PNNL__Proteome__Velos___QExact__01_28_2016__PNNL__Gene__CDAP_iTRAQ_UnsharedLogRatio_r2.cct
@@ -161,6 +159,46 @@ ovCNV_df <- ovCNV_df[]
 
 # usethis::use_data(ovCNV_df)
 
+######  gene expression Data  #####################################################
+require(TCGAbiolinks)
+queryDown.OV <- GDCquery(project = "TCGA-OV",
+                         data.category = "Transcriptome Profiling",
+                         data.type = "Gene Expression Quantification",
+                         experimental.strategy = "RNA-Seq", 
+                         workflow.type = "HTSeq - FPKM-UQ")
 
+GDCdownload(query = queryDown.OV)
 
+dataPrep.OV <- GDCprepare(query = queryDown.OV)
 
+save(dataPrep.OV, file = "TCGA_dataPrep.OV.hg38.Rdata")
+
+dataPrep2 <- TCGAanalyze_Preprocessing(
+  object = dataPrep.OV,
+  cor.cut = 0.6)
+
+dataNorm <- TCGAanalyze_Normalization(
+  tabDF = as.matrix(dataPrep2),
+  geneInfo = geneInfoHT,
+  method = "gcContent")
+
+boxplot(dataNorm[,c(1:40)],outline = FALSE)
+
+dataNorm <- as.data.frame(dataNorm)
+dataNorm <- rownames_to_column(dataNorm, var = "ensembl_gene_id")
+###change ensemble id into gene name
+load("~/Bioc2019pathwayPCA/inst/extdata/Human_genes__GRCh38_p12_.rda")
+gene.location <- gene.location[,c(5,7)]
+mRNA_norm <- left_join(dataNorm, gene.location, by = "ensembl_gene_id")
+####rm duplicate
+bool <- duplicated(mRNA_norm$ensembl_gene_id)
+mRNA_norm_sub <- mRNA_norm[!bool,]
+mRNA_norm_sub <- mRNA_norm_sub[,-1]
+mRNA_norm_sub <- mRNA_norm_sub[,c(ncol(mRNA_norm_sub),1:ncol(mRNA_norm_sub)-1)]
+
+ovmRNA_df <- TransposeAssay(mRNA_norm_sub) %>%
+  # Replace "." with "-"
+  mutate(Sample = str_replace_all(Sample, "\\.", "-"))
+
+ovmRNA_df$Sample <- str_sub(ovmRNA_df$Sample, start = 1, end = 12)
+#usethis::usedata(ovmRNA_df)
