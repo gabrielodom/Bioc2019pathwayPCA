@@ -13,6 +13,7 @@ library(pathwayPCA)
 data("ovPheno_df")
 data("ovProteome_df")
 data("ovCNV_df")
+data("ovmRNA_df")
 
 dataDir_path <- system.file(
   "extdata", package = "pathwayPCA", mustWork = TRUE
@@ -96,6 +97,25 @@ c2proteo_aespca <- AESPCA_pVals(
 )
 Sys.time() - a2 # 0.4 min
 
+###  gene expression  ###
+mRNA_Omics <- CreateOmics(
+  assayData_df = ovmRNA_df,
+  pathwayCollection_ls = wikipathways_PC,
+  response = ovPheno_df,
+  respType = "surv",
+  minPathSize = 5
+)
+
+a3 <- Sys.time()
+c2mRNA_aespca <- AESPCA_pVals(
+  mRNA_Omics,
+  numReps = 0,
+  parallel = TRUE,
+  numCores = 20,
+  adjustment = "BH"
+)
+Sys.time() - a3 # 1.4 min
+
 # saveRDS(c2copyNum_aespca,"lizhong_c2copyNumber_aespca.RDS")
 # saveRDS(c2proteo_aespca, "lizhong_c2proteo_aespca.RDS")
 
@@ -106,18 +126,27 @@ Sys.time() - a2 # 0.4 min
 
 cnvIL1PC1_df <- getPathPCLs(c2copyNum_aespca, "WP195")$PCs %>%
   rename(cnvPC1 = V1)
+mRNAIL1PC1_df <- getPathPCLs(c2mRNA_aespca, "WP195")$PCs %>%
+  rename(mRNAPC1 = V1)
 protIL1PC1_df  <- getPathPCLs(c2proteo_aespca, "WP195")$PCs %>%
   rename(protPC1 = V1)
 
 jointPC1_df <- inner_join(
   cnvIL1PC1_df,
+  mRNAIL1PC1_df,
+  by = "sampleID"
+)
+
+jointPC1_df2 <- inner_join(
+  jointPC1_df,
   protIL1PC1_df,
   by = "sampleID"
 )
 
-jointPC1_df[, -1] <- scale(jointPC1_df[, -1])
-jointScaledRanks_df <- jointPC1_df %>%
+jointPC1_df2[, -1] <- scale(jointPC1_df2[, -1])
+jointScaledRanks_df <- jointPC1_df2 %>%
   mutate(cnvRank = rank(cnvPC1)) %>%
+  mutate(mRNARank = rank(mRNAPC1)) %>%
   mutate(protRank = rank(protPC1))
 
 
@@ -162,20 +191,21 @@ jointScaledRanks_df <- jointPC1_df %>%
 ######  4. Colour Set-up  #####################################################
 
 # Define custom colours
-sum(jointPC1_df$cnvPC1 > 0)  # 42 pos, 41 negative
+sum(jointPC1_df2$cnvPC1 > 0)  # 30 pos, 31 negative
 
 library(grDevices)
-blues_char <- colorRampPalette(c("blue", "white"))(42)
-plot(x = 1:42, y = rep(0, 42), pch = 15, col = blues_char)
-reds_char <- colorRampPalette(c("white", "red"))(41)
-plot(x = 1:41, y = rep(0, 41), pch = 15, col = reds_char)
+blues_char <- colorRampPalette(c("blue", "white"))(31)
+plot(x = 1:31, y = rep(0, 31), pch = 15, col = blues_char)
+reds_char <- colorRampPalette(c("white", "red"))(30)
+plot(x = 1:30, y = rep(0, 30), pch = 15, col = reds_char)
 palette_char <- c(blues_char, reds_char)
-plot(x = 1:83, y = rep(0, 83), pch = 15, col = palette_char)
+plot(x = 1:61, y = rep(0, 61), pch = 15, col = palette_char)
 
 jointSortedRanks_df <- jointScaledRanks_df %>%
   arrange(cnvRank)
 
 cnvCol <- palette_char[jointSortedRanks_df$cnvRank]
+mRNACol <- palette_char[jointSortedRanks_df$mRNARank]
 protCol <- palette_char[jointSortedRanks_df$protRank]
 
 showpanel = function(col){
@@ -186,12 +216,13 @@ showpanel = function(col){
 }
 
 showpanel(cnvCol)
+showpanel(mRNACol)
 showpanel(protCol)
 
 ######  5. Circos Plot  #######################################################
 library(circlize)
 
-nSamps <- 83
+nSamps <- 61
 factors <- seq_len(nSamps)
 
 circos.clear()
@@ -212,6 +243,14 @@ circos.trackPlotRegion(
   track.height = 0.3
 )
 
+# gene expression
+circos.trackPlotRegion(
+  ylim = c(0, 3),
+  factors = factors,
+  bg.col = mRNACol,
+  track.height = 0.3
+)
+
 # copy number
 circos.trackPlotRegion(
   ylim = c(0, 3),
@@ -220,33 +259,38 @@ circos.trackPlotRegion(
   track.height = 0.3
 )
 
-##write characters
-suppressMessages(
-  circos.trackText(
-    rep(-3, nSamps),
-    rep(-3.8, nSamps),
-    labels = "IL-1 Signaling \n Pathway",
-    factors = factors,
-    col = "#2d2d2d",
-    font = 2,
-    adj = par("adj"),
-    cex = 1.5,
-    facing = "downward",
-    niceFacing = TRUE
-  )
-)
-
 ##add legends
-par(new = TRUE)
-par(mar = c(15, 32, 5, 0))
-plot(
-  x = c(0, 0.1), y = c(0, 0.1),
-  type = "n", xlab = "", ylab = "",
-  axes = FALSE,
-  main = "pc1 score"
-)
-text(x = 0.05, y = 0.09, "Red: > 0")
-text(x = 0.05, y = 0.07, "Blue: < 0")
+col_fun = colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
+lgd_links = Legend(at = c(-2, -1, 0, 1, 2), col_fun = col_fun, 
+                   title_position = "topleft", title = "PC1 score")
+draw(lgd_links, x = unit(25, "mm"), y = unit(65, "mm"), just = c("left", "bottom"))
+# ##write characters
+# suppressMessages(
+#   circos.trackText(
+#     rep(-3, nSamps),
+#     rep(-3.8, nSamps),
+#     labels = "IL-1 Signaling \n Pathway",
+#     factors = factors,
+#     col = "#2d2d2d",
+#     font = 2,
+#     adj = par("adj"),
+#     cex = 1.5,
+#     facing = "downward",
+#     niceFacing = TRUE
+#   )
+# )
+# 
+# ##add legends
+# par(new = TRUE)
+# par(mar = c(15, 32, 5, 0))
+# plot(
+#   x = c(0, 0.1), y = c(0, 0.1),
+#   type = "n", xlab = "", ylab = "",
+#   axes = FALSE,
+#   main = "pc1 score"
+# )
+# text(x = 0.05, y = 0.09, "Red: > 0")
+# text(x = 0.05, y = 0.07, "Blue: < 0")
 # par(new=TRUE)
 # par(mar = c(0,0,13,32))
 # plot(c(0,0.1),c(0,0.1),type = 'n', xlab = '', ylab = '',axes = F, main = 'outer loop:')
