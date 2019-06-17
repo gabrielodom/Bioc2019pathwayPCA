@@ -733,7 +733,7 @@ The result showed that NFKB1, IKBKB, and other genes are selected by AESPCA when
 Also in [Section 1.5.3](#subj_spec_scores), we have seen that there can be considerable heterogeneity in pathway activities between patients. One possible reason could be that copy number changes might not directly result in changes in protein expression for some of the patients. `pathwayPCA` can be used to estimate pathway activities for each patient, for copy number, gene, and protein expressions separately. These estimates can then be viewed jointly using a Circos plot.
 
 ```{r fig_circos, echo=FALSE, fig.align = 'center', out.width = '1200px'}
-include_graphics(file.path(figDir_char, "circosPlot_20190614.png"))
+include_graphics(file.path(figDir_char, "circosPlot_20190617.png"))
 ```
 
 The accompanying Circos plot shown normalized copy number (inner circle) and protein expression (outer circle) pathway activities for the IL-1 signaling pathway in the ovarian cancer dataset samples. Each bar corresponds to a patient sample. Red bars indicate lower expression values and negative pathway activity for the sample, while blue color bars indicate higher expression values and stronger pathway activity for the sample. Note that only some patients have concordant changes in copy number and protein expression. The code to make this plot is included in `inst/scripts/circle_plot.R`.
