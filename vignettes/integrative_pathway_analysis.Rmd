@@ -1,6 +1,6 @@
 ---
 title: "Integrative Pathway Analysis with pathwayPCA"
-author: "Gabriel Odom, Yuguang Ban, Lily Wang, & Xi Chen"
+author: "Gabriel Odom, Yuguang Ban, Lizhong Liu, Lily Wang, & Xi Chen"
 date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
@@ -35,6 +35,7 @@ figDir_char <- system.file(package = "Bioc2019pathwayPCA", "vignette")
 
 * Dr. Gabriel J. Odom^[Department of Public Health Sciences, Miller School of Medicine, The University of Miami, Miami, FL] (<gabriel.odom@med.miami.edu>)
 * Dr. Yuguang James Ban^[Sylvester Comprehensive Cancer Center, The University of Miami, Miami, FL] (<Yuguang.ban@med.miami.edu>)
+* Lizhong Liu^[Department of Public Health Sciences, Miller School of Medicine, The University of Miami, Miami, FL] (<lxl816@miami.edu>)
 * Prof. Lily Wang^[Department of Public Health Sciences, Miller School of Medicine; McDonald Foundation Department of Human Genetics; The University of Miami, Miami, FL] (<lily.wang@med.miami.edu>)
 * Prof. Steven Chen^[Department of Public Health Sciences, Miller School of Medicine; Sylvester Comprehensive Cancer Center; The University of Miami, Miami, FL] (<steven.chen@med.miami.edu>)
 
