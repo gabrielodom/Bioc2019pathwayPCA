@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^inst/extdata/*$
 ^vignettes/rsconnect/*$
+^\.travis\.yml$
